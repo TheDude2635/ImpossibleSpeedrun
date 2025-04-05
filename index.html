@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segway Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; background-color: #f0f0f0; text-align: center; font-family: 'Roboto', Arial, sans-serif; overflow: hidden; touch-action: none; }
+        canvas { width: 100vw; height: 100vh; max-width: 800px; max-height: 600px; display: block; margin: 0 auto; border: 1px solid black; }
+        #nameScreen, #startScreen, #gameOverScreen, #leaderboardScreen { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #f9f9f9; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); text-align: center; z-index: 10; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; transition: transform 0.2s, background 0.3s; }
+        button:hover { transform: scale(1.05); background: linear-gradient(135deg, #a777e3, #6e8efb); }
+        select, input[type="text"] { padding: 8px; font-size: 16px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        #leaderboardScreen { width: 600px; max-height: 80vh; overflow-y: auto; }
+        #leaderboardScreen h1 { font-size: 28px; margin-bottom: 15px; color: #333; }
+        .leaderboard-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background-color: #fff; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .difficulty-filter { display: flex; gap: 15px; }
+        .difficulty-filter label { display: flex; align-items: center; gap: 5px; font-size: 14px; color: #555; }
+        .difficulty-filter input[type="checkbox"] { accent-color: #6e8efb; }
+        table { width: 90%; margin: 0 auto 15px; border-collapse: collapse; background-color: #fff; border-radius: 10px; overflow: hidden; }
+        th { background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; padding: 12px; font-size: 16px; }
+        td { padding: 10px; font-size: 14px; color: #333; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .joystick { display: none; position: fixed; bottom: 10px; left: 10px; width: 80px; height: 80px; background: rgba(0, 0, 0, 0.5); border-radius: 50%; z-index: 20; }
+        .joystick-inner { position: absolute; top: 50%; left: 50%; width: 30px; height: 30px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); transition: background 0.2s; }
+        .joystick-inner.active { background: #00ff00; }
+        .jump-button { display: none; position: fixed; bottom: 10px; right: 10px; width: 50px; height: 50px; background: rgba(0, 0, 0, 0.7); border-radius: 50%; z-index: 20; color: white; font-size: 16px; line-height: 50px; text-align: center; transition: transform 0.1s; }
+        .jump-button:active { transform: scale(0.9); }
+        #skipButton, #nextButton { position: fixed; bottom: 10px; padding: 8px 16px; font-size: 14px; z-index: 15; }
+        #skipButton { right: 20px; }
+        #nextButton { right: 100px; }
+        @media (max-width: 600px) { .joystick, .jump-button { display: block; } canvas { width: 100vw; height: 80vh; } #leaderboardScreen { width: 90%; } .leaderboard-controls { flex-direction: column; gap: 10px; } }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="nameScreen">
+        <h1>Indtast dit navn</h1>
+        <input type="text" id="playerName" placeholder="Dit navn" maxlength="20">
+        <br>
+        <button onclick="startIntro()">Fortsæt</button>
+    </div>
+    <div id="startScreen" style="display: none;">
+        <h1>Segway Adventure</h1>
+        <p>Vælg sværhedsgrad:</p>
+        <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="normal">Normal</option>
+            <option value="hard">Hard</option>
+            <option value="speedrun">Speed Run</option>
+        </select>
+        <p>Vælg level:</p>
+        <select id="levelSelect">
+            <option value="1">Level 1: Himmel</option>
+            <option value="2">Level 2: Skyer</option>
+            <option value="3">Level 3: Mount Everest</option>
+            <option value="4">Level 4: Byen</option>
+            <option value="5">Level 5: Vand</option>
+            <option value="6">Level 6: Under Jorden</option>
+            <option value="7">Level 7: Helvede</option>
+            <option value="8">Level 8: The Void</option>
+        </select>
+        <p>Vælg din form:</p>
+        <select id="playerForm">
+            <option value="mosquito">Myg</option>
+            <option value="frog">Frø</option>
+            <option value="monkey">Abe</option> <!-- Låst op -->
+        </select>
+        <br>
+        <button onclick="startGame()">Start Spil</button>
+        <button onclick="startFullRun()">Full Run</button>
+        <button onclick="showLeaderboard()">Vis Leaderboard</button>
+    </div>
+    <div id="gameOverScreen" style="display: none;">
+        <h1>Game Over</h1>
+        <p>Din tid: <span id="finalTime">0</span>s</p>
+        <button onclick="restartGame()">Genstart</button>
+        <button onclick="backToMenu()">Tilbage til Menu</button>
+    </div>
+    <div id="leaderboardScreen" style="display: none;">
+        <h1>Leaderboard</h1>
+        <div class="leaderboard-controls">
+            <select id="leaderboardSelect">
+                <option value="full">Full Run</option>
+                <option value="1">Level 1</option>
+                <option value="2">Level 2</option>
+                <option value="3">Level 3</option>
+                <option value="4">Level 4</option>
+                <option value="5">Level 5</option>
+                <option value="6">Level 6</option>
+                <option value="7">Level 7</option>
+                <option value="8">Level 8</option>
+            </select>
+            <div class="difficulty-filter">
+                <label><input type="checkbox" id="filterEasy" checked> Easy <span style="color: green;">■</span></label>
+                <label><input type="checkbox" id="filterNormal" checked> Normal <span style="color: blue;">■</span></label>
+                <label><input type="checkbox" id="filterHard" checked> Hard <span style="color: red;">■</span></label>
+                <label><input type="checkbox" id="filterSpeedrun" checked> Speedrun <span style="color: yellow;">■</span></label>
+            </div>
+        </div>
+        <table id="leaderboardTable">
+            <tr><th>Navn</th><th>Sværhedsgrad</th><th>Tid (s)</th><th>Dødsfald (Full Run)</th></tr>
+        </table>
+        <button id="showMore" onclick="showMoreEntries()">Se flere</button>
+        <button onclick="backToMenu()">Tilbage til Menu</button>
+    </div>
+    <div class="joystick" id="joystick">
+        <div class="joystick-inner" id="joystickInner"></div>
+    </div>
+    <div class="jump-button" id="jumpButton">Hop</div>
+    <button id="skipButton" style="display: none;" onclick="skipIntro()">Skip</button>
+    <button id="nextButton" style="display: none;" onclick="nextSlide()">Næste</button>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const nameScreen = document.getElementById('nameScreen');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const leaderboardScreen = document.getElementById('leaderboardScreen');
+        const joystick = document.getElementById('joystick');
+        const joystickInner = document.getElementById('joystickInner');
+        const jumpButton = document.getElementById('jumpButton');
+        const skipButton = document.getElementById('skipButton');
+        const nextButton = document.getElementById('nextButton');
+
+        const player = {
+            x: 400, y: 500, width: 40, height: 60, speed: 5, baseSpeed: 5, jumping: false, jumpCount: 0, invincibilityTimer: 0,
+            jumpCooldown: 0, rotation: 0, energy: 100, level: 1, lives: 3, fullRun: false, fullRunTimer: 0, difficultyIndex: 0,
+            collisionBlink: 0, deaths: 0, name: "", lastDirection: 0, form: "mosquito", animationFrame: 0
+        };
+
+        let obstacles = [];
+        let projectiles = [];
+        let walls = [];
+        let particles = [];
+        let backgroundParticles = [];
+        let rainDrops = [];
+        let snowFlakes = [];
+        let bubbles = [];
+        let backgroundLayers = [
+            { y: 0, speed: 0.2, color: 'rgba(255, 255, 255, 0.5)', size: 50 },
+            { y: 0, speed: 0.5, color: 'rgba(255, 255, 255, 0.8)', size: 70 }
+        ];
+        let keys = {};
+        let gameStarted = false;
+        let gameOver = false;
+        let difficultyMultiplier = 1;
+        let energyRegenTimer = 0;
+        let levelSpeed = 2;
+        let timeElapsed = 0;
+        let speedBoostActive = false;
+        let collisionCooldown = 0;
+        let backgroundOffset = 0;
+        let animationFrame = 0;
+        let fadeAlpha = 0;
+        let shakeTimer = 0;
+        let flashTimer = 0; // Til lysglimt på level 1
+        const difficulties = ['easy', 'normal', 'hard', 'speedrun'];
+        let levelTimes = JSON.parse(localStorage.getItem('levelTimes')) || {};
+        let fullRunTimes = JSON.parse(localStorage.getItem('fullRunTimes')) || [];
+        let leaderboardLimit = 10;
+
+        let joystickActive = false;
+        let joystickX = 0;
+        let joystickY = 0;
+
+        const introText = [
+            ["Her ligger vores helt,", `${player.name}`],
+            ["Død i en tragisk segway ulykke,", "på vej på eventyr"],
+            [`Nu skal ${player.name} møde sin skaber`],
+            [`Skaberen spørger ${player.name}: "Har du syndet"`],
+            [`${player.name} lukker sine øjne,`, "og tænker på alt det,", "har gjort galt i sit liv"],
+            ["Skaberen gisper,", "han tænker længe mens han", `vurderer ${player.name}s skæbne`],
+            [`Skal ${player.name} i Himlen...`],
+            ["Eller Helvede..."],
+            ["Eller Reinkarneres og få en chance til..."],
+            ["Hmmm"],
+            ["......"],
+            ["......"],
+            [`Dommen er faldet!`, `${player.name} skal Reinkarneres!!!!`],
+            [`Men grundet alle ${player.name}s synder,`, "reinkarneres som en myg"],
+            ["Kom igennem livet igen,", "uden at træde på mennesker, natur eller væsner"],
+            ["Kom til mig igen hvis du klarer det,", "og få en chance til.", `Held og lykke, ${player.name}`]
+        ];
+        const slideDurations = [9.75, 10.5, 10.5, 12, 15, 10.5, 12, 6, 6, 6, 12, 10.5, 10.5, 12, 21];
+        let introIndex = 0;
+        let introFade = 0;
+        let introTimer = 0;
+        let introComplete = false;
+
+        window.startIntro = function() {
+            const nameInput = document.getElementById('playerName').value.trim();
+            if (nameInput) {
+                player.name = nameInput;
+                introText[0] = ["Her ligger vores helt,", player.name];
+                introText[2] = [`Nu skal ${player.name} møde sin skaber`];
+                introText[3] = [`Skaberen spørger ${player.name}: "Har du syndet"`];
+                introText[4] = [`${player.name} lukker sine øjne,`, "og tænker på alt det,", "har gjort galt i sit liv"];
+                introText[5] = ["Skaberen gisper,", "han tænker længe mens han", `vurderer ${player.name}s skæbne`];
+                introText[6] = [`Skal ${player.name} i Himlen...`];
+                introText[12] = [`Dommen er faldet!`, `${player.name} skal Reinkarneres!!!!`];
+                introText[13] = [`Men grundet alle ${player.name}s synder,`, "reinkarneres som en myg"];
+                introText[15] = ["Kom til mig igen hvis du klarer det,", "og få en chance til.", `Held og lykke, ${player.name}`];
+                nameScreen.style.display = 'none';
+                skipButton.style.display = 'block';
+                nextButton.style.display = 'block';
+                drawIntro();
+            } else {
+                alert("Indtast venligst dit navn!");
+            }
+        };
+
+        function drawIntro() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'gray';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2 - 50, canvas.height - 100);
+            ctx.lineTo(canvas.width / 2 + 50, canvas.height - 100);
+            ctx.lineTo(canvas.width / 2 + 40, canvas.height - 200);
+            ctx.lineTo(canvas.width / 2 - 40, canvas.height - 200);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = 'darkgray';
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height - 200, 40, Math.PI, 0);
+            ctx.fill();
+
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Roboto';
+            ctx.textAlign = 'center';
+            ctx.fillText(`RIP ${player.name}`, canvas.width / 2, canvas.height - 150);
+
+            const corners = [
+                { x: 20, y: 20 },
+                { x: canvas.width - 40, y: 20 },
+                { x: 20, y: canvas.height - 40 },
+                { x: canvas.width - 40, y: canvas.height - 40 }
+            ];
+            corners.forEach(corner => {
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(corner.x + 10, corner.y + 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(corner.x + 7, corner.y + 8, 2, 0, Math.PI * 2);
+                ctx.arc(corner.x + 13, corner.y + 8, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(corner.x + 8, corner.y + 14);
+                ctx.lineTo(corner.x + 12, corner.y + 14);
+                ctx.stroke();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(corner.x + 2, corner.y + 18);
+                ctx.lineTo(corner.x + 18, corner.y + 2);
+                ctx.moveTo(corner.x + 2, corner.y + 2);
+                ctx.lineTo(corner.x + 18, corner.y + 18);
+                ctx.stroke();
+            });
+
+            if (introIndex < introText.length) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${introFade})`;
+                ctx.font = '30px Roboto';
+                const lines = introText[introIndex];
+                const lineHeight = 40;
+                const totalHeight = lines.length * lineHeight;
+                const startY = (canvas.height - totalHeight) / 3;
+                lines.forEach((line, i) => {
+                    ctx.fillText(line, canvas.width / 2, startY + i * lineHeight);
+                });
+                introTimer += 1 / 60;
+                const duration = slideDurations[introIndex];
+                if (introTimer <= duration / 3) {
+                    introFade = introTimer / (duration / 3);
+                } else if (introTimer <= duration * 2 / 3) {
+                    introFade = 1;
+                } else if (introTimer <= duration) {
+                    introFade = 1 - (introTimer - duration * 2 / 3) / (duration / 3);
+                } else {
+                    introIndex++;
+                    introFade = 0;
+                    introTimer = 0;
+                }
+                requestAnimationFrame(drawIntro);
+            } else if (!introComplete) {
+                introComplete = true;
+                introTimer = 0;
+            }
+
+            if (introComplete) {
+                introTimer += 1 / 60;
+                if (introTimer >= 0.5) {
+                    skipButton.style.display = 'none';
+                    nextButton.style.display = 'none';
+                    startScreen.style.display = 'block';
+                } else {
+                    requestAnimationFrame(drawIntro);
+                }
+            }
+        }
+
+        function skipIntro() { introIndex = introText.length; introFade = 0; introTimer = 0; introComplete = true; }
+        window.skipIntro = skipIntro;
+
+        function nextSlide() { introIndex++; introFade = 0; introTimer = 0; if (introIndex >= introText.length) introComplete = true; }
+        window.nextSlide = nextSlide;
+
+        for (let i = 0; i < 20; i++) {
+            backgroundParticles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 3 + 1, speedY: Math.random() * 1 + 0.5, life: Math.random() * 2 });
+        }
+        for (let i = 0; i < 150; i++) { // Øget fra 100 til 150 for mere regn på level 2
+            rainDrops.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 3 + 2, speedY: Math.random() * 5 + 3 });
+        }
+        for (let i = 0; i < 150; i++) { // Øget fra 100 til 150 for mere sne på level 3
+            snowFlakes.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 3 + 2, speedY: Math.random() * 2 + 1 });
+        }
+        for (let i = 0; i < 30; i++) {
+            bubbles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 10 + 5, speedY: -(Math.random() * 1 + 0.5) });
+        }
+
+        joystick.addEventListener('touchstart', (e) => { e.preventDefault(); joystickActive = true; joystickInner.classList.add('active'); handleJoystick(e.touches[0]); });
+        joystick.addEventListener('touchmove', (e) => { e.preventDefault(); if (joystickActive) handleJoystick(e.touches[0]); });
+        joystick.addEventListener('touchend', (e) => { e.preventDefault(); joystickActive = false; joystickInner.classList.remove('active'); joystickInner.style.left = '50%'; joystickInner.style.top = '50%'; keys['ArrowLeft'] = false; keys['ArrowRight'] = false; keys['ArrowUp'] = false; keys['ArrowDown'] = false; });
+        jumpButton.addEventListener('touchstart', (e) => { e.preventDefault(); keys[' '] = true; });
+        jumpButton.addEventListener('touchend', (e) => { e.preventDefault(); keys[' '] = false; });
+
+        function handleJoystick(touch) {
+            const rect = joystick.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const touchX = touch.clientX;
+            const touchY = touch.clientY;
+            const dx = touchX - centerX;
+            const dy = touchY - centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDistance = rect.width / 2 - 15;
+            const angle = Math.atan2(dy, dx);
+            const limitedDistance = Math.min(distance, maxDistance);
+            joystickX = limitedDistance * Math.cos(angle);
+            joystickY = limitedDistance * Math.sin(angle);
+            joystickInner.style.left = `${50 + (joystickX / maxDistance) * 40}%`;
+            joystickInner.style.top = `${50 + (joystickY / maxDistance) * 40}%`;
+            keys['ArrowLeft'] = dx < -20;
+            keys['ArrowRight'] = dx > 20;
+            keys['ArrowUp'] = dy < -20;
+            keys['ArrowDown'] = dy > 20;
+        }
+
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; keys[e.code] = true; if (e.key === 'r' || e.key === 'R') restartGame(); });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; keys[e.code] = false; });
+
+        function startGame() {
+            const difficulty = document.getElementById('difficulty').value;
+            const form = document.getElementById('playerForm').value;
+            setDifficulty(difficulty);
+            player.level = parseInt(document.getElementById('levelSelect').value);
+            player.fullRun = false;
+            player.form = form;
+            resetPlayer();
+            generateObstacles();
+            startScreen.style.display = 'none';
+            gameStarted = true;
+            fadeAlpha = 0;
+            update();
+        }
+        window.startGame = startGame;
+
+        function startFullRun() {
+            player.fullRun = true;
+            player.level = 1;
+            player.difficultyIndex = 0;
+            player.form = 'mosquito';
+            setDifficulty(difficulties[player.difficultyIndex]);
+            player.lives = 3;
+            player.fullRunTimer = 0;
+            player.deaths = 0;
+            resetPlayer();
+            generateObstacles();
+            startScreen.style.display = 'none';
+            gameStarted = true;
+            fadeAlpha = 0;
+            update();
+        }
+        window.startFullRun = startFullRun;
+
+        function setDifficulty(diff) {
+            if (diff === 'easy') difficultyMultiplier = 1;
+            else if (diff === 'normal') difficultyMultiplier = 1.5;
+            else if (diff === 'hard') difficultyMultiplier = 2;
+            else if (diff === 'speedrun') difficultyMultiplier = 2.5;
+        }
+
+        function resetPlayer() {
+            player.x = 400; player.y = 500; player.energy = 100; player.jumpCount = 0; player.jumping = false; player.invincibilityTimer = 0; player.jumpCooldown = 0; player.rotation = 0; player.lastDirection = 0; timeElapsed = 0; obstacles = []; projectiles = []; walls = []; particles = []; gameOver = false; collisionCooldown = 0; player.collisionBlink = 0; fadeAlpha = 0; flashTimer = 0;
+        }
+
+        function restartGame() { gameOver = false; gameOverScreen.style.display = 'none'; resetPlayer(); generateObstacles(); update(); }
+        window.restartGame = restartGame;
+
+        function backToMenu() { gameOver = false; gameStarted = false; gameOverScreen.style.display = 'none'; leaderboardScreen.style.display = 'none'; startScreen.style.display = 'block'; }
+        window.backToMenu = backToMenu;
+
+        function showLeaderboard() { startScreen.style.display = 'none'; leaderboardScreen.style.display = 'block'; leaderboardLimit = 10; updateLeaderboard(); document.getElementById('leaderboardSelect').onchange = updateLeaderboard; document.getElementById('filterEasy').onchange = updateLeaderboard; document.getElementById('filterNormal').onchange = updateLeaderboard; document.getElementById('filterHard').onchange = updateLeaderboard; document.getElementById('filterSpeedrun').onchange = updateLeaderboard; }
+        window.showLeaderboard = showLeaderboard;
+
+        function showMoreEntries() { if (leaderboardLimit === 10) leaderboardLimit = 50; else if (leaderboardLimit === 50) leaderboardLimit = 100; updateLeaderboard(); }
+        window.showMoreEntries = showMoreEntries;
+
+        function updateLeaderboard() {
+            const selectedLevel = document.getElementById('leaderboardSelect').value;
+            const filterEasy = document.getElementById('filterEasy').checked;
+            const filterNormal = document.getElementById('filterNormal').checked;
+            const filterHard = document.getElementById('filterHard').checked;
+            const filterSpeedrun = document.getElementById('filterSpeedrun').checked;
+            const table = document.getElementById('leaderboardTable');
+            table.innerHTML = '<tr><th>Navn</th><th>Sværhedsgrad</th><th>Tid (s)</th><th>Dødsfald (Full Run)</th></tr>';
+            let entries = [];
+            if (selectedLevel === 'full') {
+                entries = fullRunTimes.map(entry => ({ name: entry.name, difficulty: 'Full Run', time: entry.time, deaths: entry.deaths }));
+            } else {
+                for (let diff of difficulties) {
+                    if ((diff === 'easy' && filterEasy) || (diff === 'normal' && filterNormal) || (diff === 'hard' && filterHard) || (diff === 'speedrun' && filterSpeedrun)) {
+                        const key = `${selectedLevel}-${diff}`;
+                        const entry = levelTimes[key];
+                        if (entry) entries.push({ name: entry.name, difficulty: diff, time: entry.time, deaths: '-' });
+                    }
+                }
+            }
+            entries.sort((a, b) => a.time - b.time);
+            const limitedEntries = entries.slice(0, leaderboardLimit);
+            if (limitedEntries.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="4">Ingen tider registreret endnu</td>';
+                table.appendChild(row);
+            } else {
+                limitedEntries.forEach(entry => {
+                    const row = document.createElement('tr');
+                    let color = entry.difficulty === 'easy' ? 'green' : entry.difficulty === 'normal' ? 'blue' : entry.difficulty === 'hard' ? 'red' : entry.difficulty === 'speedrun' ? 'yellow' : 'black';
+                    row.innerHTML = `<td>${entry.name}</td><td style="color: ${color}">${entry.difficulty}</td><td>${entry.time.toFixed(2)}</td><td>${entry.deaths}</td>`;
+                    table.appendChild(row);
+                });
+            }
+            const showMoreButton = document.getElementById('showMore');
+            showMoreButton.style.display = entries.length > leaderboardLimit ? 'block' : 'none';
+            showMoreButton.textContent = leaderboardLimit === 10 ? 'Se top 50' : 'Se top 100';
+        }
+
+        function generateObstacles() {
+            obstacles = [];
+            projectiles = [];
+            walls = [];
+            const baseObstacles = [];
+            let levelSpeedMultiplier = 1 + (player.level - 1) * 0.2;
+            levelSpeed = 2 * levelSpeedMultiplier;
+
+            if (player.level !== 5 && player.level !== 6) {
+                walls.push({ x: 0, y: 0, width: 30, height: canvas.height, type: 'Wall', size: 'large' }, { x: canvas.width - 30, y: 0, width: 30, height: canvas.height, type: 'Wall', size: 'large' });
+            }
+
+            if (player.level === 1) {
+                let yPos = -50;
+                for (let i = 0; i < 15; i++) {
+                    let xPos1 = 50 + (i % 3) * 400;
+                    let xPos2 = 100 + ((i + 1) % 3) * 400;
+                    let xPos3 = 150 + ((i + 2) % 3) * 400;
+                    baseObstacles.push(
+                        { x: xPos1, y: yPos, width: 120, height: 80, type: 'Angel', size: 'large', moving: true, speedX: 1 },
+                        { x: xPos2, y: yPos - 200, width: 40, height: 30, type: 'Harp', size: 'small' }, // Lidt større harpe
+                        { x: xPos3, y: yPos - 400, width: 100, height: 60, type: 'Gate', size: 'large' }
+                    );
+                    yPos -= 600;
+                }
+            } else if (player.level === 2) {
+                let yPos = -50;
+                for (let i = 0; i < 25; i++) {
+                    let xPos1 = 100 + (i % 3) * 200;
+                    let xPos2 = 150 + ((i + 1) % 3) * 200;
+                    let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    baseObstacles.push(
+                        { x: xPos1, y: yPos, width: 30, height: 20, type: 'Bird', size: 'small', moving: true, speedX: 2 },
+                        { x: xPos2, y: yPos - 150, width: 60, height: 40, type: 'Meteor', size: 'large', moving: true, speedX: 1.5, speedY: 1.5 },
+                        { x: xPos3, y: yPos - 300, width: 100, height: 50, type: 'Airplane', size: 'large' }
+                    );
+                    yPos -= 450;
+                }
+            } else if (player.level === 3) {
+                let yPos = -50;
+                for (let i = 0; i < 25; i++) {
+                    let xPos1 = 100 + (i % 3) * 200;
+                    let xPos2 = 150 + ((i + 1) % 3) * 200;
+                    let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    baseObstacles.push(
+                        { x: xPos1, y: yPos, width: 100, height: 60, type: 'Rock', size: 'large' }, // Lidt større sten
+                        { x: xPos2, y: yPos - 150, width: 50, height: 30, type: 'Tent', size: 'medium' },
+                        { x: xPos3, y: yPos - 300, width: 40, height: 60, type: 'Climber', size: 'small', moving: true, speedX: 1 }
+                    );
+                    yPos -= 450;
+                }
+            } else if (player.level === 4) {
+                let yPos = -50;
+                for (let i = 0; i < 25; i++) {
+                    let xPos1 = 100 + (i % 3) * 200;
+                    let xPos2 = 150 + ((i + 1) % 3) * 200;
+                    let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    baseObstacles.push(
+                        { x: xPos1, y: yPos, width: 100, height: 50, type: 'Car', size: 'large', moving: true, speedX: 3 },
+                        { x: xPos2, y: yPos - 150, width: 30, height: 50, type: 'Pedestrian', size: 'small', moving: true, speedX: 1 }, // Større personer
+                        { x: xPos3, y: yPos - 300, width: 60, height: 80, type: 'Building', size: 'large' }
+                    );
+                    yPos -= 450;
+                }
+            } else if (player.level === 5) {
+                let yPos = -200;
+                for (let i = 0; i < 25; i++) {
+                    let xPos1 = 100 + (i % 3) * 200;
+                    let xPos2 = 150 + ((i + 1) % 3) * 200;
+                    baseObstacles.push(
+                        { x: xPos1, y: yPos, width: 30, height: 20, type: 'Fish', size: 'small', moving: true, speedX: 2 },
+                        { x: xPos2, y: yPos - 150, width: 120, height: 60, type: 'Shark', size: 'large', moving: true, speedX: 1.5 }
+                    );
+                    yPos -= 300;
+                }
+            } else if (player.level === 6) {
+                let pathWidth = difficultyMultiplier === 1 ? 200 : difficultyMultiplier === 1.5 ? 150 : difficultyMultiplier === 2 ? 100 : 80;
+                let centerX = canvas.width / 2;
+                let yPos = -50;
+                let amplitude = 300;
+                let frequency = 0.1;
+                let stoneLineCount = difficultyMultiplier === 1 ? 4 : Math.floor(difficultyMultiplier * 6);
+                let stoneLineAdded = 0;
+                for (let i = 0; i < 90; i++) {
+                    let offset = amplitude * Math.sin(i * frequency * Math.PI);
+                    centerX = (canvas.width / 2) + offset;
+                    if (centerX - pathWidth < 0) centerX = pathWidth;
+                    if (centerX + pathWidth > canvas.width) centerX = canvas.width - pathWidth;
+                    walls.push(
+                        { x: 0, y: yPos, width: centerX - pathWidth, height: 30, type: 'Wall', size: 'large' },
+                        { x: centerX + pathWidth, y: yPos, width: canvas.width - (centerX + pathWidth), height: 30, type: 'Wall', size: 'large' }
+                    );
+                    if (difficultyMultiplier === 1 && (i === 20 || i === 60)) {
+                        let stoneX = centerX - pathWidth / 4;
+                        obstacles.push({ x: stoneX, y: yPos, width: 40, height: 20, type: 'Rock', size: 'small', speed: levelSpeed });
+                    } else if (difficultyMultiplier > 1 && i % 10 === 0) {
+                        let stoneX = centerX - pathWidth / 4;
+                        obstacles.push({ x: stoneX, y: yPos, width: 40, height: 20, type: 'Rock', size: 'small', speed: levelSpeed });
+                    }
+                    if (stoneLineAdded < stoneLineCount && i === Math.floor(90 / (stoneLineCount + 1)) * (stoneLineAdded + 1)) {
+                        let startX = centerX - pathWidth;
+                        for (let x = startX; x < centerX + pathWidth; x += 15) {
+                            obstacles.push({ x: x, y: yPos, width: 10, height: 10, type: 'StoneDots', size: 'small', speed: levelSpeed });
+                            obstacles.push({ x: x + 5, y: yPos + 5, width: 10, height: 10, type: 'StoneDots', size: 'small', speed: levelSpeed }); // Anden række
+                        }
+                        stoneLineAdded++;
+                    }
+                    yPos -= 50;
+                }
+            } else if (player.level === 7) {
+                let yPos = -50;
+                for (let i = 0; i < 15; i++) {
+                    let xPos1 = 100 + (i % 3) * 200;
+                    let xPos2 = 150 + ((i + 1) % 3) * 200;
+                    let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    baseObstacles.push(
+                        { x: xPos1, y: yPos, width: 30, height: 30, type: 'Demon', size: 'small', shooting: true, shootType: 'horizontal' },
+                        { x: xPos2, y: yPos - 200, width: 80, height: 50, type: 'Devil', size: 'large', shooting: true, shootType: 'pitchfork' },
+                        { x: xPos3, y: yPos - 400, width: 50, height: 30, type: 'Flame', size: 'medium' }
+                    );
+                    yPos -= 600;
+                }
+                baseObstacles.push({ x: canvas.width - 150, y: -9000, width: 150, height: 500, type: 'FinalDevil', size: 'boss', shooting: true, shootType: 'tripleFire' });
+            } else if (player.level === 8) {
+                let yPos = -50;
+                for (let i = 0; i < 20; i++) {
+                    let xPos1 = 100 + (i % 3) * 200;
+                    let xPos2 = 150 + ((i + 1) % 3) * 200;
+                    let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    baseObstacles.push(
+                        { x: xPos1, y: yPos, width: 20, height: 10, type: 'ShootingStar', size: 'small', moving: true, speedX: i % 2 === 0 ? 5 : -5 },
+                        { x: xPos2, y: yPos - 150, width: 15, height: 15, type: 'Asteroid', size: 'small', moving: true, speedX: i % 2 === 0 ? 2 : -2 }
+                    );
+                    for (let x = 30; x < canvas.width - 30; x += 20) {
+                        obstacles.push({ x: x, y: yPos - 300, width: 10, height: 10, type: 'AsteroidBelt', size: 'small', speed: levelSpeed });
+                    }
+                    yPos -= 450;
+                }
+                for (let i = 0; i < 30; i++) {
+                    baseObstacles.push({ x: 100 + (i % 5) * 150, y: -50 - (i % 10) * 200, width: 10, height: 10, type: 'Star', size: 'small', speed: levelSpeed });
+                }
+            }
+
+            for (let i = 0; i < baseObstacles.length; i++) {
+                obstacles.push({ ...baseObstacles[i], speed: levelSpeed });
+                if (baseObstacles[i].type !== 'Wall') {
+                    for (let j = 0; j < Math.floor(difficultyMultiplier); j++) {
+                        let newX = baseObstacles[i].x + (j + 1) * 50;
+                        obstacles.push({ x: newX, y: baseObstacles[i].y - (j + 1) * 30, width: baseObstacles[i].width, height: baseObstacles[i].height, type: baseObstacles[i].type, size: baseObstacles[i].size, speed: levelSpeed, moving: baseObstacles[i].moving, speedX: baseObstacles[i].speedX, shooting: baseObstacles[i].shooting, shootType: baseObstacles[i].shootType });
+                    }
+                }
+            }
+            timeElapsed = 0;
+        }
+
+        function update() {
+            if (!gameStarted || gameOver) return;
+
+            speedBoostActive = false;
+            let speedModifier = 1;
+            if (keys['ArrowUp'] || keys['KeyW']) { speedModifier = 1.25; speedBoostActive = true; }
+            else if (keys['ArrowDown'] || keys['KeyS']) { speedModifier = 0.25; }
+
+            player.speed = player.baseSpeed * speedModifier;
+            if (keys['ArrowLeft'] || keys['KeyA']) { player.x -= player.speed; player.lastDirection = -1; }
+            if (keys['ArrowRight'] || keys['KeyD']) { player.x += player.speed; player.lastDirection = 1; }
+            if (!keys['ArrowLeft'] && !keys['ArrowRight'] && !keys['KeyA'] && !keys['KeyD']) { player.lastDirection = 0; }
+
+            if ((keys[' '] || keys['Space']) && player.energy >= 100 && player.jumpCooldown <= 0 && !player.jumping) {
+                player.jumping = true;
+                player.jumpCount++;
+                player.invincibilityTimer = 1;
+                player.rotation = 0;
+                player.energy = 0;
+                for (let i = 0; i < 10; i++) {
+                    particles.push({ x: player.x + player.width / 2, y: player.y + player.height, size: 2 + i % 3, speedX: (i % 2 - 0.5) * 2, speedY: i % 3, life: 0.5, color: player.level === 5 ? 'blue' : player.level === 7 ? 'red' : 'white' });
+                }
+            }
+
+            if (player.invincibilityTimer > 0) {
+                player.invincibilityTimer -= 1 / 60;
+                player.rotation += (2 * Math.PI) / 60;
+                if (player.invincibilityTimer <= 0) { player.jumping = false; player.invincibilityTimer = 0; player.rotation = 0; player.jumpCount = 0; player.jumpCooldown = 2; }
+            }
+
+            if (player.jumpCooldown > 0) player.jumpCooldown -= 1 / 60;
+
+            if (player.level === 5) {
+                if (player.x < 0) player.x = 0;
+                if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+            } else {
+                if (player.x < 30) player.x = 30;
+                if (player.x > canvas.width - player.width - 30) player.x = canvas.width - player.width - 30;
+            }
+
+            energyRegenTimer += 1 / 60;
+            if (energyRegenTimer >= 2) { player.energy = 100; energyRegenTimer = 0; }
+
+            let allObstaclesPassed = true;
+            let obstaclesToRemove = [];
+            obstacles.forEach((obs, index) => {
+                obs.y += obs.speed * speedModifier;
+                if (obs.moving) {
+                    obs.x += (obs.speedX || 2) * speedModifier;
+                    if (obs.x <= 30 || obs.x >= canvas.width - obs.width - 30) obs.speedX = -obs.speedX;
+                }
+                if (obs.y + obs.height > 0 && obs.y < canvas.height) allObstaclesPassed = false;
+                if (obs.y > canvas.height) obstaclesToRemove.push(index);
+
+                let shootInterval = difficultyMultiplier === 1 ? 3 : 1.5;
+                if (obs.shooting && timeElapsed % shootInterval < 1 / 60) {
+                    if (obs.shootType === 'horizontal') {
+                        projectiles.push({ x: obs.x, y: obs.y, width: 10, height: 10, speedX: -3, speedY: 0, type: 'fireball' });
+                    } else if (obs.shootType === 'pitchfork') {
+                        let directionX = player.x < obs.x ? -1 : 1;
+                        projectiles.push({ x: obs.x, y: obs.y, width: 15, height: 15, speedX: directionX * 2, speedY: 1, type: 'pitchfork' });
+                    } else if (obs.shootType === 'tripleFire') {
+                        projectiles.push({ x: obs.x, y: obs.y + 50, width: 20, height: 20, speedX: -2, speedY: -1, type: 'bigFireball' });
+                        projectiles.push({ x: obs.x, y: obs.y + 50, width: 20, height: 20, speedX: -2, speedY: 0, type: 'bigFireball' });
+                        projectiles.push({ x: obs.x, y: obs.y + 50, width: 20, height: 20, speedX: -2, speedY: 1, type: 'bigFireball' });
+                    }
+                }
+                if (player.invincibilityTimer <= 0 && collisionCooldown <= 0 && player.x < obs.x + obs.width && player.x + player.width > obs.x && player.y < obs.y + obs.height && player.y + player.height > obs.y) handleCollision();
+            });
+
+            obstaclesToRemove.reverse().forEach(index => obstacles.splice(index, 1));
+
+            let wallsToRemove = [];
+            walls.forEach((wall, index) => {
+                wall.y += levelSpeed * speedModifier;
+                if (wall.y + wall.height > 0 && wall.y < canvas.height) allObstaclesPassed = false;
+                if (wall.y > canvas.height) wallsToRemove.push(index);
+                if (player.invincibilityTimer <= 0 && collisionCooldown <= 0 && player.x < wall.x + wall.width && player.x + player.width > wall.x && player.y < wall.y + wall.height && player.y + player.height > wall.y) handleCollision();
+            });
+
+            wallsToRemove.reverse().forEach(index => walls.splice(index, 1));
+
+            let projectilesToRemove = [];
+            projectiles.forEach((proj, index) => {
+                proj.x += proj.speedX * speedModifier;
+                proj.y += proj.speedY * speedModifier;
+                if (proj.x < 0 || proj.x > canvas.width || proj.y > canvas.height) projectilesToRemove.push(index);
+                if (player.invincibilityTimer <= 0 && collisionCooldown <= 0 && player.x < proj.x + proj.width && player.x + player.width > proj.x && player.y < proj.y + proj.height && player.y + player.height > proj.y) handleCollision();
+            });
+
+            projectilesToRemove.reverse().forEach(index => projectiles.splice(index, 1));
+
+            particles = particles.filter(p => { p.x += p.speedX; p.y += p.speedY; p.life -= 1 / 60; return p.life > 0; });
+            backgroundParticles = backgroundParticles.filter(p => { p.y += p.speedY; p.life -= 1 / 60; if (p.y > canvas.height) { p.y = -p.size; p.x = Math.random() * canvas.width; p.life = Math.random() * 2; } return p.life > 0; });
+            rainDrops.forEach(drop => { drop.y += drop.speedY; if (drop.y > canvas.height) { drop.y = -drop.size; drop.x = Math.random() * canvas.width; } });
+            snowFlakes.forEach(flake => { flake.y += flake.speedY; if (flake.y > canvas.height) { flake.y = -flake.size; flake.x = Math.random() * canvas.width; } });
+            bubbles.forEach(bubble => { bubble.y += bubble.speedY; if (bubble.y < 0) { bubble.y = canvas.height + bubble.size; bubble.x = Math.random() * canvas.width; } });
+
+            if (collisionCooldown > 0) { collisionCooldown -= 1 / 60; player.collisionBlink = Math.sin(Date.now() * 0.01) > 0 ? 1 : 0; } else player.collisionBlink = 0;
+            if (fadeAlpha < 1) fadeAlpha += 0.02;
+            if (shakeTimer > 0) shakeTimer -= 1 / 60;
+            if (flashTimer > 0) flashTimer -= 1 / 60;
+
+            timeElapsed += 1 / 60;
+            if (player.fullRun) player.fullRunTimer += 1 / 60;
+            if (allObstaclesPassed && obstacles.length === 0 && walls.length === 0) {
+                const timeKey = `${player.level}-${difficulties[player.difficultyIndex]}`;
+                if (!levelTimes[timeKey] || timeElapsed < levelTimes[timeKey].time) {
+                    levelTimes[timeKey] = { name: player.name, time: timeElapsed };
+                    localStorage.setItem('levelTimes', JSON.stringify(levelTimes));
+                }
+                if (player.fullRun) {
+                    player.level++;
+                    if (player.level > 8) {
+                        player.level = 1;
+                        player.difficultyIndex++;
+                        if (player.difficultyIndex >= difficulties.length) {
+                            fullRunTimes.push({ name: player.name, time: player.fullRunTimer, deaths: player.deaths });
+                            localStorage.setItem('fullRunTimes', JSON.stringify(fullRunTimes));
+                            alert(`Full Run gennemført! Tid: ${player.fullRunTimer.toFixed(2)}s, Dødsfald: ${player.deaths}`);
+                            gameOver = true;
+                            document.getElementById('finalTime').innerText = player.fullRunTimer.toFixed(2);
+                            gameOverScreen.style.display = 'block';
+                            return;
+                        }
+                        setDifficulty(difficulties[player.difficultyIndex]);
+                    }
+                    generateObstacles();
+                    fadeAlpha = 0;
+                } else {
+                    alert(`Level gennemført! Tid: ${timeElapsed.toFixed(2)}s`);
+                    gameOver = true;
+                    document.getElementById('finalTime').innerText = timeElapsed.toFixed(2);
+                    gameOverScreen.style.display = 'block';
+                    if (player.level === 1) flashTimer = 0.5; // Lysglimt ved afslutning af level 1
+                    for (let i = 0; i < 20; i++) {
+                        particles.push({ x: canvas.width / 2, y: 0, size: 5, speedX: (Math.random() - 0.5) * 5, speedY: Math.random() * 5, life: 1, color: 'yellow' });
+                    }
+                }
+            }
+
+            backgroundOffset += levelSpeed * speedModifier * 0.5;
+            if (backgroundOffset > canvas.height) backgroundOffset -= canvas.height;
+            animationFrame++;
+            player.animationFrame++;
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function handleCollision() {
+            if (player.fullRun) {
+                player.lives--;
+                player.deaths++;
+                if (player.lives <= 0) {
+                    gameOver = true;
+                    document.getElementById('finalTime').innerText = player.fullRunTimer.toFixed(2);
+                    gameOverScreen.style.display = 'block';
+                } else {
+                    player.x = 400; player.y = 500; player.energy = 100; player.jumping = false; player.jumpCount = 0; player.invincibilityTimer = 0; player.jumpCooldown = 0; player.rotation = 0; timeElapsed = 0; projectiles = []; collisionCooldown = 1; shakeTimer = 0.5; generateObstacles();
+                    for (let i = 0; i < 15; i++) {
+                        particles.push({ x: player.x + player.width / 2, y: player.y + player.height / 2, size: 3, speedX: (Math.random() - 0.5) * 5, speedY: (Math.random() - 0.5) * 5, life: 0.5, color: player.level === 5 ? 'blue' : player.level === 7 ? 'red' : 'gray' });
+                    }
+                }
+            } else {
+                gameOver = true;
+                document.getElementById('finalTime').innerText = timeElapsed.toFixed(2);
+                gameOverScreen.style.display = 'block';
+                shakeTimer = 0.5;
+            }
+        }
+
+        function draw() {
+            ctx.save();
+            if (shakeTimer > 0) {
+                const shakeX = (Math.random() - 0.5) * 5;
+                const shakeY = (Math.random() - 0.5) * 5;
+                ctx.translate(shakeX, shakeY);
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            switch (player.level) {
+                case 1: gradient.addColorStop(0, 'lightblue'); gradient.addColorStop(1, 'white'); break;
+                case 2: gradient.addColorStop(0, 'skyblue'); gradient.addColorStop(1, 'lightgray'); break;
+                case 3: gradient.addColorStop(0, 'white'); gradient.addColorStop(0.5, 'lightgray'); gradient.addColorStop(1, 'gray'); break;
+                case 4: gradient.addColorStop(0, 'lightgray'); gradient.addColorStop(1, '#4A4A4A'); break;
+                case 5: gradient.addColorStop(0, 'blue'); gradient.addColorStop(1, 'darkblue'); break;
+                case 6: gradient.addColorStop(0, '#4A2F1A'); gradient.addColorStop(1, '#2F1C0F'); break;
+                case 7: const pulse = Math.sin(animationFrame * 0.05) * 0.1 + 0.9; gradient.addColorStop(0, `rgba(255, 0, 0, ${pulse})`); gradient.addColorStop(1, `rgba(139, 0, 0, ${pulse})`); break;
+                case 8: gradient.addColorStop(0, 'black'); gradient.addColorStop(1, 'black'); break;
+            }
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (player.level === 1) {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI / 3) + (animationFrame * 0.01);
+                    ctx.fillStyle = `rgba(255, 255, ${Math.sin(animationFrame * 0.05) * 50 + 200}, 0.3)`;
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width / 2, canvas.height / 2);
+                    ctx.lineTo(canvas.width / 2 + Math.cos(angle) * canvas.width, canvas.height / 2 + Math.sin(angle) * canvas.height);
+                    ctx.lineTo(canvas.width / 2 + Math.cos(angle + Math.PI / 3) * canvas.width, canvas.height / 2 + Math.sin(angle + Math.PI / 3) * canvas.height);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+            } else if (player.level === 2) {
+                // Bevægelige og vilkårlige skyer
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                for (let i = 0; i < 10; i++) {
+                    let cloudX = (backgroundOffset * 0.3 + i * 80 + Math.sin(animationFrame * 0.02 + i) * 50) % canvas.width;
+                    let cloudY = (backgroundOffset * 0.2 + i * 60 + Math.cos(animationFrame * 0.01 + i) * 30) % canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(cloudX, cloudY, 40, 0, Math.PI * 2);
+                    ctx.arc(cloudX + 30, cloudY - 20, 30, 0, Math.PI * 2);
+                    ctx.arc(cloudX + 60, cloudY, 35, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = 'rgba(0, 0, 255, 0.3)';
+                rainDrops.forEach(drop => { ctx.fillRect(drop.x, drop.y, drop.size / 2, drop.size); });
+                backgroundParticles.forEach(p => { ctx.fillStyle = `rgba(0, 0, 255, ${p.life * 0.5})`; ctx.fillRect(p.x, p.y, p.size, p.size * 2); });
+            } else if (player.level === 3) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height * 0.7);
+                for (let x = 0; x < canvas.width; x += 50) {
+                    ctx.lineTo(x, canvas.height * 0.7 - (Math.sin(x * 0.02 + backgroundOffset * 0.01) * 100));
+                }
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.lineTo(0, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                snowFlakes.forEach(flake => { ctx.beginPath(); ctx.arc(flake.x, flake.y, flake.size / 2, 0, Math.PI * 2); ctx.fill(); });
+                backgroundParticles.forEach(p => { ctx.fillStyle = `rgba(255, 255, 255, ${p.life * 0.8})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
+            } else if (player.level === 4) {
+                ctx.fillStyle = 'rgba(139, 69, 19, 0.3)';
+                ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+                for (let i = 0; i < 5; i++) {
+                    ctx.fillStyle = 'gray';
+                    let buildingHeight = 150 + Math.sin(i * 0.5) * 50;
+                    ctx.fillRect(50 + i * 150, canvas.height - buildingHeight - (backgroundOffset % 100), 100, buildingHeight);
+                    ctx.fillStyle = 'yellow';
+                    ctx.font = '20px Roboto';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('NETTO', 100 + i * 150, canvas.height - buildingHeight - (backgroundOffset % 100) + 25);
+                    for (let j = 0; j < 3; j++) {
+                        ctx.fillRect(60 + i * 150 + j * 30, canvas.height - buildingHeight - (backgroundOffset % 100) + 50, 20, 30);
+                    }
+                }
+                // Ekstra byeffekter over bygningerne
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                for (let i = 0; i < 3; i++) {
+                    ctx.fillRect(100 + i * 200, canvas.height - 250 - (backgroundOffset % 50), 80, 100); // Højere bygninger
+                }
+            } else if (player.level === 5) {
+                // Bevægelige bølger
+                const waveOffset = Math.sin(animationFrame * 0.05) * 20;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                for (let i = 0; i < 8; i++) {
+                    let waveY = (backgroundOffset * 0.5 + i * 50 + waveOffset) % canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(0, waveY);
+                    ctx.quadraticCurveTo(200, waveY - 20, 400, waveY);
+                    ctx.quadraticCurveTo(600, waveY + 20, 800, waveY);
+                    ctx.stroke();
+                }
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                bubbles.forEach(bubble => { ctx.beginPath(); ctx.arc(bubble.x, bubble.y, bubble.size / 2, 0, Math.PI * 2); ctx.fill(); });
+            } else if (player.level === 6) {
+                ctx.fillStyle = 'rgba(139, 69, 19, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(50, 30, 20, 0.8)';
+                for (let i = 0; i < 10; i++) {
+                    let y = (backgroundOffset * 0.5 + i * 80) % canvas.height;
+                    ctx.fillRect(0, y, canvas.width, 20);
+                }
+                ctx.fillStyle = 'rgba(100, 50, 30, 0.6)';
+                for (let i = 0; i < 5; i++) {
+                    let y = (backgroundOffset * 0.7 + i * 150) % canvas.height;
+                    ctx.fillRect(20, y, 10, 100);
+                    ctx.fillRect(canvas.width - 30, y, 10, 100);
+                }
+                // Ekstra jorddetaljer
+                ctx.fillStyle = 'rgba(80, 40, 20, 0.4)';
+                for (let i = 0; i < 6; i++) {
+                    ctx.fillRect(50 + i * 120, canvas.height - 100 - (backgroundOffset % 60), 60, 40);
+                }
+            } else if (player.level === 7) {
+                // Flammer i baggrunden
+                ctx.fillStyle = 'rgba(255, 165, 0, 0.3)';
+                for (let i = 0; i < 10; i++) {
+                    let flameY = (backgroundOffset * 0.5 + i * 100) % canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(100 + i * 70, flameY, 30, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(255, 69, 0, 0.5)';
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                for (let i = 0; i < 5; i++) {
+                    let flameY = canvas.height * 0.7 - (Math.sin(i * 0.5 + backgroundOffset * 0.01) * 100);
+                    ctx.beginPath();
+                    ctx.moveTo(50 + i * 150, canvas.height);
+                    ctx.lineTo(100 + i * 150, flameY - 50);
+                    ctx.lineTo(150 + i * 150, canvas.height);
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+            } else if (player.level === 8) {
+                // Færre, tydeligere stjerner
+                ctx.fillStyle = 'white';
+                for (let i = 0; i < 20; i++) { // Reduceret fra 50 til 20
+                    let starX = Math.random() * canvas.width;
+                    let starY = Math.random() * canvas.height;
+                    ctx.fillRect(starX, starY, 3, 3); // Lidt større og tydeligere
+                }
+            }
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            for (let i = -1; i < 2; i++) ctx.fillRect(0, (backgroundOffset + i * canvas.height) % canvas.height, canvas.width, 10);
+
+            ctx.fillStyle = player.level === 6 ? 'brown' : 'gray';
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'black';
+            walls.forEach(wall => {
+                if (wall.y + wall.height > 0 && wall.y < wall.height) {
+                    ctx.beginPath();
+                    ctx.moveTo(wall.x, wall.y);
+                    ctx.lineTo(wall.x + wall.width / 3, wall.y - 10);
+                    ctx.lineTo(wall.x + wall.width * 2 / 3, wall.y + 10);
+                    ctx.lineTo(wall.x + wall.width, wall.y);
+                    ctx.lineTo(wall.x + wall.width, wall.y + wall.height);
+                    ctx.lineTo(wall.x + wall.width * 2 / 3, wall.y + wall.height + 10);
+                    ctx.lineTo(wall.x + wall.width / 3, wall.y + wall.height - 10);
+                    ctx.lineTo(wall.x, wall.y + wall.height);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (wall.y + wall.height > 0 && wall.y < canvas.height) ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+            });
+
+            obstacles.forEach(obs => {
+                if (obs.y + obs.height > 0 && obs.y < canvas.height) {
+                    ctx.shadowBlur = 0;
+                    switch (obs.type) {
+                        case 'Angel':
+                            ctx.shadowBlur = 15;
+                            ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(obs.x + 15, obs.y + 20, 30, 60);
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + 20);
+                            ctx.lineTo(obs.x + 20, obs.y + 40);
+                            ctx.lineTo(obs.x + 10, obs.y + 60);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 60, obs.y + 20);
+                            ctx.lineTo(obs.x + 40, obs.y + 40);
+                            ctx.lineTo(obs.x + 50, obs.y + 60);
+                            ctx.fill();
+                            ctx.fillStyle = 'tan';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 30, obs.y + 10, 15, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 25, obs.y + 5, 2, 0, Math.PI * 2);
+                            ctx.arc(obs.x + 35, obs.y + 5, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'yellow';
+                            ctx.save();
+                            ctx.translate(obs.x + 30, obs.y - 10);
+                            ctx.rotate(animationFrame * 0.05);
+                            ctx.beginPath();
+                            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.restore();
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 30, obs.y + 10, 20, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        case 'Harp':
+                            ctx.shadowBlur = 10;
+                            ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
+                            ctx.fillStyle = '#8B6914';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height); // Bund
+                            ctx.lineTo(obs.x + obs.width / 2, obs.y); // Top
+                            ctx.lineTo(obs.x + obs.width, obs.y + obs.height); // Bund igen
+                            ctx.quadraticCurveTo(obs.x + obs.width * 0.75, obs.y + obs.height / 2, obs.x + obs.width / 4, obs.y + obs.height); // Buet ramme
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.strokeStyle = 'white';
+                            ctx.lineWidth = 1;
+                            for (let i = 1; i < 5; i++) { // Flere strenge
+                                ctx.beginPath();
+                                ctx.moveTo(obs.x + i * (obs.width / 5), obs.y + obs.height);
+                                ctx.lineTo(obs.x + obs.width / 2, obs.y);
+                                ctx.stroke();
+                            }
+                            break;
+                        case 'Gate':
+                            ctx.shadowBlur = 20;
+                            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                            ctx.fillStyle = 'gold';
+                            ctx.fillRect(obs.x, obs.y + 20, obs.width, obs.height - 20);
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 2, obs.y + 20, obs.width / 2, Math.PI, 0);
+                            ctx.fill();
+                            ctx.fillRect(obs.x, obs.y, obs.width, 10);
+                            ctx.strokeStyle = 'darkgoldenrod';
+                            ctx.lineWidth = 2;
+                            for (let i = 0; i < 5; i++) {
+                                ctx.beginPath();
+                                ctx.moveTo(obs.x + (obs.width / 5) * i, obs.y + 20);
+                                ctx.lineTo(obs.x + (obs.width / 5) * i, obs.y + obs.height);
+                                ctx.stroke();
+                            }
+                            break;
+                        case 'Bird':
+                            ctx.fillStyle = 'white';
+                            const wingFlap = Math.sin(animationFrame * 0.2) * 5;
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y + wingFlap, obs.x + obs.width, obs.y + obs.height / 2);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y + obs.height - wingFlap, obs.x, obs.y + obs.height / 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width / 2 - 10, obs.y - 5);
+                            ctx.lineTo(obs.x + obs.width / 2 - 15, obs.y + obs.height / 2);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width / 2 + 10, obs.y - 5);
+                            ctx.lineTo(obs.x + obs.width / 2 + 15, obs.y + obs.height / 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'yellow';
+                              ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width + 5, obs.y + obs.height / 2 - 5);
+                            ctx.lineTo(obs.x + obs.width + 10, obs.y + obs.height / 2);
+                            ctx.fill();
+                            break;
+                        case 'Meteor':
+                            ctx.shadowBlur = 15;
+                            ctx.shadowColor = 'rgba(255, 69, 0, 0.7)';
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y);
+                            ctx.lineTo(obs.x + obs.width, obs.y + obs.height / 4);
+                            ctx.lineTo(obs.x + obs.width * 0.8, obs.y + obs.height);
+                            ctx.lineTo(obs.x + obs.width / 4, obs.y + obs.height * 0.9);
+                            ctx.lineTo(obs.x, obs.y + obs.height / 3);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.fillStyle = 'darkgray';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 3, obs.y + obs.height / 3, 5, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width * 2 / 3, obs.y + obs.height * 2 / 3, 7, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'white';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 4, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'red';
+                            ctx.beginPath();
+                            if (obs.speedX > 0) {
+                                ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                                ctx.lineTo(obs.x - 20, obs.y + obs.height / 2 - 10);
+                                ctx.lineTo(obs.x - 20, obs.y + obs.height / 2 + 10);
+                            } else {
+                                ctx.moveTo(obs.x + obs.width, obs.y + obs.height / 2);
+                                ctx.lineTo(obs.x + obs.width + 20, obs.y + obs.height / 2 - 10);
+                                ctx.lineTo(obs.x + obs.width + 20, obs.y + obs.height / 2 + 10);
+                            }
+                            ctx.fill();
+                            ctx.fillStyle = 'orange';
+                            ctx.beginPath();
+                            if (obs.speedX > 0) {
+                                ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                                ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 - 5);
+                                ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 + 5);
+                            } else {
+                                ctx.moveTo(obs.x + obs.width, obs.y + obs.height / 2);
+                                ctx.lineTo(obs.x + obs.width + 10, obs.y + obs.height / 2 - 5);
+                                ctx.lineTo(obs.x + obs.width + 10, obs.y + obs.height / 2 + 5);
+                            }
+                            ctx.fill();
+                            break;
+                        case 'Airplane':
+                            ctx.fillStyle = 'silver';
+                            ctx.beginPath();
+                            ctx.ellipse(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, obs.height / 2, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.strokeStyle = 'red';
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                            ctx.fillStyle = 'black';
+                            ctx.font = '12px Roboto';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('SpaceX', obs.x + obs.width / 2, obs.y + obs.height / 2 + 5);
+                            ctx.fillStyle = 'orange';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x - 20, obs.y + obs.height / 2 - 15);
+                            ctx.lineTo(obs.x - 20, obs.y + obs.height / 2 + 15);
+                            ctx.fill();
+                            ctx.fillStyle = 'yellow';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 - 10);
+                            ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 + 10);
+                            ctx.fill();
+                            break;
+                        case 'Rock':
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            for (let i = 0; i < 8; i++) {
+                                const angle = i * Math.PI / 4;
+                                const x = obs.x + obs.width / 2 + Math.cos(angle) * (obs.width / 2);
+                                const y = obs.y + obs.height / 2 + Math.sin(angle) * (obs.height / 2);
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            }
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.fillStyle = 'darkgray';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 3, obs.y + obs.height / 3, 5, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width * 2 / 3, obs.y + obs.height * 2 / 3, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'white'; // Sne på toppen
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y);
+                            ctx.lineTo(obs.x + obs.width / 3, obs.y + obs.height / 4);
+                            ctx.lineTo(obs.x + obs.width * 2 / 3, obs.y + obs.height / 4);
+                            ctx.closePath();
+                            ctx.fill();
+                            break;
+                        case 'Tent':
+                            ctx.fillStyle = 'darkgreen';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y);
+                            ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+                            ctx.lineTo(obs.x, obs.y + obs.height);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.strokeStyle = 'green';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y);
+                            ctx.lineTo(obs.x + obs.width / 2, obs.y + obs.height);
+                            ctx.stroke();
+                            break;
+                        case 'Climber':
+                            ctx.fillStyle = 'blue';
+                            ctx.fillRect(obs.x + 10, obs.y + 20, 20, 40);
+                            ctx.fillStyle = 'tan';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 20, obs.y + 10, 10, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 17, obs.y + 8, 2, 0, Math.PI * 2);
+                            ctx.arc(obs.x + 23, obs.y + 8, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        case 'Car':
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(obs.x, obs.y + obs.height / 3, obs.width, obs.height * 2 / 3);
+                            ctx.fillStyle = 'lightgray';
+                            ctx.fillRect(obs.x + obs.width / 4, obs.y + obs.height / 6, obs.width / 2, obs.height / 3);
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 5, obs.y + obs.height, 10, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width * 4 / 5, obs.y + obs.height, 10, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'yellow';
+                            ctx.fillRect(obs.x + obs.width - 10, obs.y + obs.height / 2, 5, 10);
+                            break;
+                        case 'Pedestrian':
+                            ctx.fillStyle = 'gray';
+                            ctx.fillRect(obs.x + 5, obs.y + 20, 10, 20);
+                            ctx.fillStyle = 'tan';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 10, obs.y + 10, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        case 'Building':
+                            ctx.fillStyle = 'gray';
+                            ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                            ctx.fillStyle = 'yellow';
+                            for (let i = 0; i < 3; i++) {
+                                for (let j = 0; j < 2; j++) {
+                                    ctx.fillRect(obs.x + 10 + i * 15, obs.y + 10 + j * 30, 10, 20);
+                                }
+                            }
+                            break;
+                        case 'Fish':
+                            ctx.fillStyle = 'silver';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y, obs.x + obs.width, obs.y + obs.height / 2);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y + obs.height, obs.x, obs.y + obs.height / 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width - 5, obs.y + obs.height / 2, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            const tailFlap = Math.sin(animationFrame * 0.1) * 5;
+                            ctx.fillStyle = 'silver';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 - 10 + tailFlap);
+                            ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 + 10 - tailFlap);
+                            ctx.fill();
+                            break;
+                        case 'Shark':
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y, obs.x + obs.width, obs.y + obs.height / 2);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y + obs.height, obs.x, obs.y + obs.height / 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width + 15, obs.y + obs.height / 2 - 15);
+                            ctx.lineTo(obs.x + obs.width + 15, obs.y + obs.height / 2 + 15);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width * 0.6, obs.y + obs.height * 0.2);
+                            ctx.lineTo(obs.x + obs.width * 0.7, obs.y - 10);
+                            ctx.lineTo(obs.x + obs.width * 0.8, obs.y + obs.height * 0.2);
+                            ctx.fill();
+                            ctx.fillStyle = 'white';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width * 0.1, obs.y + obs.height / 2 - 10);
+                            ctx.lineTo(obs.x + obs.width * 0.3, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width * 0.1, obs.y + obs.height / 2 + 10);
+                            ctx.fill();
+                            ctx.fillStyle = 'gray';
+                            for (let i = 0; i < 3; i++) {
+                                ctx.beginPath();
+                                ctx.moveTo(obs.x + obs.width * 0.1 + i * 5, obs.y + obs.height / 2 - 5);
+                                ctx.lineTo(obs.x + obs.width * 0.1 + i * 5 + 2, obs.y + obs.height / 2 + 5);
+                                ctx.lineTo(obs.x + obs.width * 0.1 + i * 5 + 4, obs.y + obs.height / 2 - 5);
+                                ctx.fill();
+                            }
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width * 0.05, obs.y + obs.height * 0.4, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        case 'StoneDots':
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        case 'Demon':
+                            ctx.fillStyle = 'red';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 15, obs.y + 15, 15, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 10, obs.y);
+                            ctx.lineTo(obs.x + 15, obs.y - 5);
+                            ctx.lineTo(obs.x + 20, obs.y);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 20, obs.y + 30);
+                            ctx.lineTo(obs.x + 25, obs.y + 35);
+                            ctx.lineTo(obs.x + 30, obs.y + 30);
+                            ctx.fill();
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 10, obs.y + 15, 2, 0, Math.PI * 2);
+                            ctx.arc(obs.x + 20, obs.y + 15, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 8, obs.y + 10);
+                            ctx.lineTo(obs.x + 12, obs.y + 12);
+                            ctx.moveTo(obs.x + 18, obs.y + 12);
+                            ctx.lineTo(obs.x + 22, obs.y + 10);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 15, obs.y + 20);
+                            ctx.lineTo(obs.x + 15, obs.y + 25);
+                            ctx.stroke();
+                            break;
+                        case 'Devil':
+                            ctx.shadowBlur = 15;
+                            ctx.shadowColor = 'rgba(255, 0, 0, 0.7)';
+                            ctx.fillStyle = 'darkred';
+                            ctx.fillRect(obs.x + 20, obs.y + 20, 40, 30);
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + 20);
+                            ctx.lineTo(obs.x + 40, obs.y);
+                            ctx.lineTo(obs.x + 80, obs.y + 20);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 60, obs.y + 50);
+                            ctx.lineTo(obs.x + 70, obs.y + 60);
+                            ctx.lineTo(obs.x + 80, obs.y + 50);
+                            ctx.fill();
+                            ctx.fillStyle = 'tan';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 40, obs.y + 10, 15, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 35, obs.y + 10, 3, 0, Math.PI * 2);
+                            ctx.arc(obs.x + 45, obs.y + 10, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 33, obs.y + 5);
+                            ctx.lineTo(obs.x + 37, obs.y + 7);
+                            ctx.moveTo(obs.x + 43, obs.y + 7);
+                            ctx.lineTo(obs.x + 47, obs.y + 5);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 40, obs.y + 20);
+                            ctx.lineTo(obs.x + 40, obs.y + 30);
+                            ctx.stroke();
+                            break;
+                        case 'Flame':
+                            ctx.shadowBlur = 10;
+                            ctx.shadowColor = 'rgba(255, 69, 0, 0.8)';
+                            ctx.fillStyle = 'orange';
+                            const flameScale = Math.sin(animationFrame * 0.1) * 0.2 + 1;
+                            ctx.save();
+                            ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                            ctx.scale(flameScale, 1);
+                            ctx.beginPath();
+                            ctx.moveTo(0, -obs.height / 2);
+                            ctx.lineTo(obs.width / 2, obs.height / 2);
+                            ctx.lineTo(-obs.width / 2, obs.height / 2);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.restore();
+                            ctx.fillStyle = 'yellow';
+                            ctx.save();
+                            ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                            ctx.scale(flameScale * 0.7, 0.7);
+                            ctx.beginPath();
+                            ctx.moveTo(0, -obs.height / 2);
+                            ctx.lineTo(obs.width / 2, obs.height / 2);
+                            ctx.lineTo(-obs.width / 2, obs.height / 2);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.restore();
+                            break;
+                        case 'FinalDevil':
+                            ctx.shadowBlur = 20;
+                            ctx.shadowColor = 'rgba(255, 0, 0, 1)';
+                            ctx.fillStyle = 'darkred';
+                            ctx.fillRect(obs.x + 50, obs.y + 100, 50, 400);
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + 200);
+                            ctx.lineTo(obs.x + 75, obs.y);
+                            ctx.lineTo(obs.x + 150, obs.y + 200);
+                            ctx.fill();
+                            ctx.fillStyle = 'tan';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 75, obs.y + 75, 30, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 65, obs.y + 70, 5, 0, Math.PI * 2);
+                            ctx.arc(obs.x + 85, obs.y + 70, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        case 'ShootingStar':
+                            ctx.shadowBlur = 10;
+                            ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                            ctx.fillStyle = `rgba(255, 255, 255, ${Math.sin(animationFrame * 0.1) * 0.5 + 0.5})`;
+                            ctx.beginPath();
+                            for (let i = 0; i < 6; i++) { // 6-spidset stjerne
+                                const angle = i * Math.PI / 3;
+                                const radius = i % 2 === 0 ? obs.width / 2 : obs.width / 4; // Stjerneform som *
+                                const x = obs.x + obs.width / 2 + Math.cos(angle) * radius;
+                                const y = obs.y + obs.height / 2 + Math.sin(angle) * radius;
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            }
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.strokeStyle = 'white';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width / 2 - obs.speedX * 2, obs.y + obs.height / 2);
+                            ctx.stroke();
+                            break;
+                        case 'Asteroid':
+                            ctx.fillStyle = 'darkgray';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 3, obs.y + obs.height / 3, 3, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width * 2 / 3, obs.y + obs.height / 2, 4, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width / 4, obs.y + obs.height * 2 / 3, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        case 'AsteroidBelt':
+                            ctx.fillStyle = 'darkgray';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 3, obs.y + obs.height / 3, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        case 'Star':
+                            ctx.fillStyle = 'white';
+                            ctx.beginPath();
+                            for (let i = 0; i < 6; i++) { // 6-spidset stjerne
+                                const angle = i * Math.PI / 3;
+                                const radius = i % 2 === 0 ? obs.width / 2 : obs.width / 4; // Stjerneform som *
+                                const x = obs.x + obs.width / 2 + Math.cos(angle) * radius;
+                                const y = obs.y + obs.height / 2 + Math.sin(angle) * radius;
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            }
+                            ctx.closePath();
+                            ctx.fill();
+                            break;
+                    }
+                    ctx.shadowBlur = 0;
+                }
+            });
+
+            projectiles.forEach(proj => {
+                if (proj.y + proj.height > 0 && proj.y < canvas.height) {
+                    switch (proj.type) {
+                        case 'fireball':
+                            ctx.shadowBlur = 10;
+                            ctx.shadowColor = 'rgba(255, 69, 0, 0.8)';
+                            ctx.fillStyle = 'orange';
+                            ctx.beginPath();
+                            ctx.arc(proj.x + proj.width / 2, proj.y + proj.height / 2, proj.width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                        case 'pitchfork':
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.moveTo(proj.x + proj.width / 2, proj.y);
+                            ctx.lineTo(proj.x + proj.width / 2, proj.y + proj.height);
+                            ctx.lineTo(proj.x + proj.width / 2 - 5, proj.y + proj.height);
+                            ctx.lineTo(proj.x + proj.width / 2 - 5, proj.y + proj.height / 2);
+                            ctx.lineTo(proj.x + proj.width / 2, proj.y + proj.height / 2);
+                            ctx.lineTo(proj.x + proj.width / 2 + 5, proj.y + proj.height / 2);
+                            ctx.lineTo(proj.x + proj.width / 2 + 5, proj.y + proj.height);
+                            ctx.closePath();
+                            ctx.fill();
+                            break;
+                        case 'bigFireball':
+                            ctx.shadowBlur = 15;
+                            ctx.shadowColor = 'rgba(255, 0, 0, 0.9)';
+                            ctx.fillStyle = 'red';
+                            ctx.beginPath();
+                            ctx.arc(proj.x + proj.width / 2, proj.y + proj.height / 2, proj.width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'yellow';
+                            ctx.beginPath();
+                            ctx.arc(proj.x + proj.width / 2, proj.y + proj.height / 2, proj.width / 4, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                    }
+                }
+            });
+
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.save();
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+            ctx.rotate(player.rotation);
+            if (player.collisionBlink === 0) {
+                if (player.form === 'mosquito') {
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.arc(0, -player.height / 4, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillRect(-5, -player.height / 4, 10, player.height / 2);
+                    ctx.beginPath();
+                    ctx.moveTo(0, -player.height / 3);
+                    ctx.lineTo(0, -player.height * 0.6);
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.fillStyle = 'red';
+                    ctx.beginPath();
+                    ctx.arc(-7, -player.height / 4 - 5, 4, 0, Math.PI * 2);
+                    ctx.arc(7, -player.height / 4 - 5, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    const wingFlap = Math.sin(player.animationFrame * 0.2) * 5;
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0); // Start midt på kroppen
+                    ctx.quadraticCurveTo(player.width / 4, wingFlap - 10, player.width, wingFlap); // Oval vingeform
+                    ctx.lineTo(player.width, 10);
+                    ctx.quadraticCurveTo(player.width / 4, 20, 0, 10);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.quadraticCurveTo(-player.width / 4, wingFlap - 10, -player.width, wingFlap);
+                    ctx.lineTo(-player.width, 10);
+                    ctx.quadraticCurveTo(-player.width / 4, 20, 0, 10);
+                    ctx.closePath();
+                    ctx.fill();
+                    if (speedBoostActive) {
+                        ctx.strokeStyle = 'gray';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(0, player.height / 4);
+                        ctx.lineTo(-10, player.height / 4 + 10);
+                        ctx.stroke();
+                    }
+                } else if (player.form === 'frog') {
+                    ctx.fillStyle = 'green';
+                    ctx.beginPath();
+                    ctx.arc(0, -10, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillRect(-15, 0, 30, 20);
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(-10, -15, 5, 0, Math.PI * 2);
+                    ctx.arc(10, -15, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.arc(-10, -15, 2, 0, Math.PI * 2);
+                    ctx.arc(10, -15, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    const legBend = (speedBoostActive || player.jumping) ? 15 : Math.sin(player.animationFrame * 0.1) * 5;
+                    ctx.fillStyle = 'green';
+                    ctx.beginPath();
+                    ctx.moveTo(-15, 20);
+                    ctx.lineTo(-20, 20 + legBend);
+                    ctx.lineTo(-25, 20);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(15, 20);
+                    ctx.lineTo(20, 20 + legBend);
+                    ctx.lineTo(25, 20);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(-15, 0);
+                    ctx.lineTo(-20, 10 + legBend);
+                    ctx.lineTo(-25, 20);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(15, 0);
+                    ctx.lineTo(20, 10 + legBend);
+                    ctx.lineTo(25, 20);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(-10, 20);
+                    ctx.lineTo(-15, 20 + legBend);
+                    ctx.lineTo(-20, 20);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(10, 20);
+                    ctx.lineTo(15, 20 + legBend);
+                    ctx.lineTo(20, 20);
+                    ctx.fill();
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.arc(0, -5, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'red';
+                    ctx.beginPath();
+                    ctx.arc(0, -5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (player.jumping) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, -5);
+                        ctx.lineTo(20, 20);
+                        ctx.lineTo(-20, 20);
+                        ctx.fill();
+                    } else if (speedBoostActive) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, -5);
+                        ctx.lineTo(10, 10);
+                        ctx.lineTo(-10, 10);
+                        ctx.fill();
+                    }
+                } else if (player.form === 'monkey') {
+                    // Genskabt abe med supermandskappe
+                    ctx.fillStyle = 'brown';
+                    ctx.beginPath();
+                    ctx.arc(0, -player.height / 4, 10, 0, Math.PI * 2); // Hoved
+                    ctx.fill();
+                    ctx.fillRect(-5, -player.height / 4, 10, player.height / 2); // Krop
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -player.height / 4); // Venstre arm fremme
+                    ctx.lineTo(-20, -player.height / 2);
+                    ctx.lineTo(-25, -player.height / 4);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(5, -player.height / 4); // Højre arm
+                    ctx.lineTo(10, 0);
+                    ctx.lineTo(15, -player.height / 4);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(-5, player.height / 4); // Hale
+                    ctx.lineTo(-15, player.height / 2 + Math.sin(animationFrame * 0.2) * 5);
+                    ctx.lineTo(-20, player.height / 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'red';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -player.height / 4); // Supermandskappe
+                    ctx.lineTo(10, -player.height / 4 + Math.sin(animationFrame * 0.2) * 5);
+                    ctx.lineTo(20, player.height / 4);
+                    ctx.lineTo(-10, player.height / 4);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = 'tan';
+                    ctx.beginPath();
+                    ctx.arc(0, -player.height / 4 - 5, 5, 0, Math.PI * 2); // Ansigt
+                    ctx.fill();
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.arc(-2, -player.height / 4 - 5, 1, 0, Math.PI * 2); // Øjne
+                    ctx.arc(2, -player.height / 4 - 5, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (speedBoostActive) {
+                        ctx.fillStyle = 'yellow';
+                        ctx.beginPath();
+                        ctx.moveTo(0, player.height / 4);
+                        ctx.lineTo(-10, player.height / 2);
+                        ctx.lineTo(-15, player.height / 4);
+                        ctx.fill();
+                    }
+                }
+                if (player.jumping) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'yellow';
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 25, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'black';
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Roboto';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Tid: ${timeElapsed.toFixed(2)}s`, 10, 30);
+            if (player.fullRun) {
+                ctx.fillText(`Liv: ${player.lives}`, 10, 60);
+                ctx.fillText(`Full Run Tid: ${player.fullRunTimer.toFixed(2)}s`, 10, 90);
+            }
+            ctx.fillText(`Level: ${player.level}`, 10, player.fullRun ? 120 : 60);
+
+            const energyGradient = ctx.createLinearGradient(0, 0, 100, 0);
+            energyGradient.addColorStop(0, 'red');
+            energyGradient.addColorStop(1, 'green');
+            ctx.fillStyle = energyGradient;
+            ctx.fillRect(10, canvas.height - 40, player.energy, 20);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(10, canvas.height - 40, 100, 20);
+            if (player.energy === 100) {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'green';
+                ctx.strokeStyle = 'white';
+                ctx.strokeRect(10, canvas.height - 40, 100, 20);
+            }
+
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = `rgba(0, 0, 0, ${1 - fadeAlpha})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Lysglimt ved afslutning af level 1
+            if (flashTimer > 0) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${flashTimer * 2})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            ctx.restore();
+        }
+
+        nameScreen.style.display = 'block';
+    </script>
+</body>
+</html>
