@@ -3,46 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Segway Adventure</title>
+    <title>Quest For Ascension</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; background-color: #f0f0f0; text-align: center; font-family: 'Roboto', Arial, sans-serif; overflow: hidden; touch-action: none; }
-        canvas { width: 100vw; height: 100vh; max-width: 800px; max-height: 600px; display: block; margin: 0 auto; border: 1px solid black; }
-        #nameScreen, #startScreen, #gameOverScreen, #leaderboardScreen { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #f9f9f9; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); text-align: center; z-index: 10; }
-        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; transition: transform 0.2s, background 0.3s; }
-        button:hover { transform: scale(1.05); background: linear-gradient(135deg, #a777e3, #6e8efb); }
-        select, input[type="text"] { padding: 8px; font-size: 16px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
-        #leaderboardScreen { width: 600px; max-height: 80vh; overflow-y: auto; }
-        #leaderboardScreen h1 { font-size: 28px; margin-bottom: 15px; color: #333; }
-        .leaderboard-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background-color: #fff; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-        .difficulty-filter { display: flex; gap: 15px; }
-        .difficulty-filter label { display: flex; align-items: center; gap: 5px; font-size: 14px; color: #555; }
-        .difficulty-filter input[type="checkbox"] { accent-color: #6e8efb; }
-        table { width: 90%; margin: 0 auto 15px; border-collapse: collapse; background-color: #fff; border-radius: 10px; overflow: hidden; }
-        th { background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; padding: 12px; font-size: 16px; }
-        td { padding: 10px; font-size: 14px; color: #333; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .joystick { display: none; position: fixed; bottom: 10px; left: 10px; width: 80px; height: 80px; background: rgba(0, 0, 0, 0.5); border-radius: 50%; z-index: 20; }
-        .joystick-inner { position: absolute; top: 50%; left: 50%; width: 30px; height: 30px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); transition: background 0.2s; }
-        .joystick-inner.active { background: #00ff00; }
-        .jump-button { display: none; position: fixed; bottom: 10px; right: 10px; width: 50px; height: 50px; background: rgba(0, 0, 0, 0.7); border-radius: 50%; z-index: 20; color: white; font-size: 16px; line-height: 50px; text-align: center; transition: transform 0.1s; }
-        .jump-button:active { transform: scale(0.9); }
-        #skipButton, #nextButton { position: fixed; bottom: 10px; padding: 8px 16px; font-size: 14px; z-index: 15; }
+        body { margin: 0; padding: 0; background: linear-gradient(to bottom, #87CEEB, #E0F6FF); /* Enhanced lively sky gradient */ font-family: 'Roboto', Arial, sans-serif; overflow: hidden; touch-action: none; animation: subtleGlow 5s ease-in-out infinite alternate; /* Subtle background animation for liveliness */ }
+        @keyframes subtleGlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        canvas { width: 100vw; height: 100vh; display: block; border: 1px solid black; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); image-rendering: optimizeSpeed; /* Optimized rendering */ }
+        #nameScreen, #startScreen, #gameOverScreen, #leaderboardScreen, #howToPlayScreen { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: linear-gradient(135deg, #ffeb3b, #ff5722); 
+            padding: 30px; border-radius: 25px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); 
+            text-align: center; z-index: 10; border: 5px solid #fff; 
+            transition: opacity 0.3s ease, transform 0.3s ease; 
+            max-width: 600px;
+            overflow-y: auto;
+        }
+        #nameScreen:hover, #startScreen:hover, #gameOverScreen:hover, #leaderboardScreen:hover, #howToPlayScreen:hover {
+            transform: translate(-50%, -50%) scale(1.02); 
+        }
+        button { 
+            padding: 12px 24px; margin: 8px 0; font-size: 18px; cursor: pointer; 
+            border: none; border-radius: 12px; background: linear-gradient(135deg, #4caf50, #2196f3); 
+            color: white; transition: transform 0.2s, background 0.3s; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); 
+            display: block; width: 150px; margin-left: auto; margin-right: auto;
+        }
+        #skipButton, #nextButton { position: fixed; bottom: 10px; padding: 8px 16px; font-size: 14px; z-index: 15; margin: 8px 10px; }
         #skipButton { right: 20px; }
         #nextButton { right: 100px; }
-        @media (max-width: 600px) { .joystick, .jump-button { display: block; } canvas { width: 100vw; height: 80vh; } #leaderboardScreen { width: 90%; } .leaderboard-controls { flex-direction: column; gap: 10px; } }
+        button:hover { transform: scale(1.1); background: linear-gradient(135deg, #2196f3, #4caf50); }
+        select, input[type="text"] { 
+            padding: 10px; font-size: 16px; margin: 8px; border-radius: 10px; 
+            border: 2px solid #fff; background: rgba(255, 255, 255, 0.8); 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            transition: border-color 0.2s; 
+            width: 80%;
+        }
+        select:focus, input[type="text"]:focus {
+            border-color: #6e8efb; 
+            outline: none;
+        }
+        #leaderboardScreen { width: 600px; max-height: 80vh; overflow-y: auto; }
+        #leaderboardScreen h1, #startScreen h1 { font-size: 36px; margin-bottom: 20px; color: #fff; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3); }
+        .leaderboard-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: rgba(255, 255, 255, 0.8); border-radius: 10px; }
+        .difficulty-filter { display: flex; gap: 15px; }
+        .difficulty-filter label { display: flex; align-items: center; gap: 5px; font-size: 14px; color: #555; }
+        table { width: 90%; margin: 0 auto 15px; border-collapse: collapse; background: rgba(255, 255, 255, 0.9); border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        th { background: linear-gradient(135deg, #ff6b6b, #4ecdc4); color: white; padding: 12px; font-size: 16px; }
+        td { padding: 10px; font-size: 14px; color: #333; }
+        tr:nth-child(even) { background: rgba(242, 242, 242, 0.8); }
+        .joystick { display: none; position: fixed; bottom: 20px; left: 20px; width: 80px; height: 80px; background: rgba(0, 0, 0, 0.5); border-radius: 50%; z-index: 20; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .joystick-inner { position: absolute; top: 50%; left: 50%; width: 30px; height: 30px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); transition: background 0.2s; }
+        .joystick-inner.active { background: #00ff00; }
+        .jump-button, .boost-button { display: none; position: fixed; bottom: 20px; width: 50px; height: 50px; background: rgba(0, 0, 0, 0.7); border-radius: 50%; z-index: 20; color: white; font-size: 16px; line-height: 50px; text-align: center; transition: transform 0.1s; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .jump-button { right: 80px; }
+        .boost-button { right: 20px; }
+        .jump-button:active, .boost-button:active { transform: scale(0.9); }
+        @media (max-width: 600px) {
+            .joystick, .jump-button, .boost-button { display: block; }
+            canvas { height: 100vh; }
+            #leaderboardScreen, #startScreen, #nameScreen { width: 90%; }
+            .leaderboard-controls { flex-direction: column; gap: 10px; }
+        }
+        #copyCodeButton { position: fixed; top: 10px; right: 10px; z-index: 100; width: auto; }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas"></canvas>
+    <button id="copyCodeButton" onclick="copyCode()">Copy Code</button>
     <div id="nameScreen">
         <h1>Indtast dit navn</h1>
         <input type="text" id="playerName" placeholder="Dit navn" maxlength="20">
-        <br>
         <button onclick="startIntro()">Fortsæt</button>
+        <button onclick="changeName()" id="changeNameButton" style="display: none;">Skift Navn</button>
     </div>
     <div id="startScreen" style="display: none;">
-        <h1>Segway Adventure</h1>
+        <h1>Quest For Ascension</h1>
         <p>Vælg sværhedsgrad:</p>
         <select id="difficulty">
             <option value="easy">Easy</option>
@@ -65,12 +103,14 @@
         <select id="playerForm">
             <option value="mosquito">Myg</option>
             <option value="frog">Frø</option>
-            <option value="monkey">Abe</option> <!-- Låst op -->
+            <option value="dog">Hund</option>
+            <option value="monkey">Abe</option>
         </select>
-        <br>
         <button onclick="startGame()">Start Spil</button>
         <button onclick="startFullRun()">Full Run</button>
         <button onclick="showLeaderboard()">Vis Leaderboard</button>
+        <button onclick="showHowToPlay()">Sådan spiller du</button>
+        <button onclick="toggleFullscreen()">Fuld Skærm</button>
     </div>
     <div id="gameOverScreen" style="display: none;">
         <h1>Game Over</h1>
@@ -82,6 +122,7 @@
         <h1>Leaderboard</h1>
         <div class="leaderboard-controls">
             <select id="leaderboardSelect">
+                <option value="all">Alle Highscores</option>
                 <option value="full">Full Run</option>
                 <option value="1">Level 1</option>
                 <option value="2">Level 2</option>
@@ -105,29 +146,52 @@
         <button id="showMore" onclick="showMoreEntries()">Se flere</button>
         <button onclick="backToMenu()">Tilbage til Menu</button>
     </div>
+    <div id="howToPlayScreen" style="display: none;">
+        <h1>Sådan spiller du</h1>
+        <p><strong>Piletaster/WASD:</strong> Bevæg dig venstre, højre, op (fart) og ned (sænk farten).</p>
+        <p><strong>Mellemrum:</strong> Hop (kræver fuld energi).</p>
+        <p><strong>Shift (venstre/højre):</strong> Dash fremad (koster 50 energi).</p>
+        <p><strong>R:</strong> Genstart spillet.</p>
+        <p>På mobil bruges joysticket til bevægelse og knapperne til hop og dash.</p>
+        <button onclick="backToMenu()">Tilbage til Menu</button>
+    </div>
     <div class="joystick" id="joystick">
         <div class="joystick-inner" id="joystickInner"></div>
     </div>
     <div class="jump-button" id="jumpButton">Hop</div>
+    <div class="boost-button" id="boostButton">Dash</div>
     <button id="skipButton" style="display: none;" onclick="skipIntro()">Skip</button>
     <button id="nextButton" style="display: none;" onclick="nextSlide()">Næste</button>
     <script>
+        function copyCode() {
+            const code = document.documentElement.outerHTML;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         const nameScreen = document.getElementById('nameScreen');
         const startScreen = document.getElementById('startScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
         const leaderboardScreen = document.getElementById('leaderboardScreen');
+        const howToPlayScreen = document.getElementById('howToPlayScreen');
         const joystick = document.getElementById('joystick');
         const joystickInner = document.getElementById('joystickInner');
         const jumpButton = document.getElementById('jumpButton');
+        const boostButton = document.getElementById('boostButton');
         const skipButton = document.getElementById('skipButton');
         const nextButton = document.getElementById('nextButton');
 
         const player = {
-            x: 400, y: 500, width: 40, height: 60, speed: 5, baseSpeed: 5, jumping: false, jumpCount: 0, invincibilityTimer: 0,
-            jumpCooldown: 0, rotation: 0, energy: 100, level: 1, lives: 3, fullRun: false, fullRunTimer: 0, difficultyIndex: 0,
-            collisionBlink: 0, deaths: 0, name: "", lastDirection: 0, form: "mosquito", animationFrame: 0
+            x: canvas.width / 2, y: canvas.height - 100, width: 40, height: 60, speed: 5, baseSpeed: 5, jumping: false, jumpCount: 0, invincibilityTimer: 0,
+            jumpCooldown: 0, rotation: 0, energy: 100, level: 1, fullRun: false, fullRunTimer: 0, difficultyIndex: 0,
+            collisionBlink: 0, deaths: 0, name: "", lastDirection: 0, form: "mosquito", animationFrame: 0, dashTimer: 0
         };
 
         let obstacles = [];
@@ -138,6 +202,8 @@
         let rainDrops = [];
         let snowFlakes = [];
         let bubbles = [];
+        let stars = [];
+        let ashParticles = [];
         let backgroundLayers = [
             { y: 0, speed: 0.2, color: 'rgba(255, 255, 255, 0.5)', size: 50 },
             { y: 0, speed: 0.5, color: 'rgba(255, 255, 255, 0.8)', size: 70 }
@@ -155,19 +221,18 @@
         let animationFrame = 0;
         let fadeAlpha = 0;
         let shakeTimer = 0;
-        let flashTimer = 0; // Til lysglimt på level 1
+        let flashTimer = 0;
         const difficulties = ['easy', 'normal', 'hard', 'speedrun'];
         let levelTimes = JSON.parse(localStorage.getItem('levelTimes')) || {};
         let fullRunTimes = JSON.parse(localStorage.getItem('fullRunTimes')) || [];
         let leaderboardLimit = 10;
-
         let joystickActive = false;
         let joystickX = 0;
         let joystickY = 0;
 
         const introText = [
             ["Her ligger vores helt,", `${player.name}`],
-            ["Død i en tragisk segway ulykke,", "på vej på eventyr"],
+            ["Død i en tragisk ulykke,", "på vej på eventyr"],
             [`Nu skal ${player.name} møde sin skaber`],
             [`Skaberen spørger ${player.name}: "Har du syndet"`],
             [`${player.name} lukker sine øjne,`, "og tænker på alt det,", "har gjort galt i sit liv"],
@@ -183,13 +248,22 @@
             ["Kom igennem livet igen,", "uden at træde på mennesker, natur eller væsner"],
             ["Kom til mig igen hvis du klarer det,", "og få en chance til.", `Held og lykke, ${player.name}`]
         ];
-        const slideDurations = [9.75, 10.5, 10.5, 12, 15, 10.5, 12, 6, 6, 6, 12, 10.5, 10.5, 12, 21];
+        const slideDurations = [9.75, 10.5, 10.5, 12, 15, 10.5, 12, 6, 6, 6, 12, 10.5, 10.5, 12, 21, 12];
         let introIndex = 0;
         let introFade = 0;
         let introTimer = 0;
         let introComplete = false;
 
-        window.startIntro = function() {
+        const savedPlayer = JSON.parse(localStorage.getItem('playerData'));
+        if (savedPlayer) {
+            player.name = savedPlayer.name;
+            document.getElementById('playerName').value = player.name;
+            document.getElementById('changeNameButton').style.display = 'block';
+            levelTimes = savedPlayer.progress.levelTimes || {};
+            fullRunTimes = savedPlayer.progress.fullRunTimes || {};
+        }
+
+        function startIntro() {
             const nameInput = document.getElementById('playerName').value.trim();
             if (nameInput) {
                 player.name = nameInput;
@@ -202,6 +276,7 @@
                 introText[12] = [`Dommen er faldet!`, `${player.name} skal Reinkarneres!!!!`];
                 introText[13] = [`Men grundet alle ${player.name}s synder,`, "reinkarneres som en myg"];
                 introText[15] = ["Kom til mig igen hvis du klarer det,", "og få en chance til.", `Held og lykke, ${player.name}`];
+                localStorage.setItem('playerData', JSON.stringify({ name: player.name, progress: { levelTimes, fullRunTimes } }));
                 nameScreen.style.display = 'none';
                 skipButton.style.display = 'block';
                 nextButton.style.display = 'block';
@@ -209,7 +284,37 @@
             } else {
                 alert("Indtast venligst dit navn!");
             }
-        };
+        }
+
+        function changeName() {
+            document.getElementById('playerName').value = '';
+            document.getElementById('changeNameButton').style.display = 'none';
+        }
+
+        function drawSkull(x, y, size) {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(x - size / 2, y - size / 4, size / 4, 0, Math.PI * 2);
+            ctx.arc(x + size / 2, y - size / 4, size / 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x - size / 2, y + size / 2);
+            ctx.lineTo(x + size / 2, y + size / 2);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = size / 10;
+            ctx.stroke();
+            ctx.strokeStyle = 'white';
+            ctx.beginPath();
+            ctx.moveTo(x - size, y + size);
+            ctx.lineTo(x, y + size / 2);
+            ctx.moveTo(x, y + size / 2);
+            ctx.lineTo(x + size, y + size);
+            ctx.stroke();
+        }
 
         function drawIntro() {
             ctx.fillStyle = 'black';
@@ -236,33 +341,19 @@
 
             const corners = [
                 { x: 20, y: 20 },
-                { x: canvas.width - 40, y: 20 },
-                { x: 20, y: canvas.height - 40 },
-                { x: canvas.width - 40, y: canvas.height - 40 }
+                { x: canvas.width - 60, y: 20 },
+                { x: 20, y: canvas.height - 60 },
+                { x: canvas.width - 60, y: canvas.height - 60 }
             ];
             corners.forEach(corner => {
-                ctx.fillStyle = 'white';
-                ctx.beginPath();
-                ctx.arc(corner.x + 10, corner.y + 10, 8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = 'black';
-                ctx.beginPath();
-                ctx.arc(corner.x + 7, corner.y + 8, 2, 0, Math.PI * 2);
-                ctx.arc(corner.x + 13, corner.y + 8, 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.moveTo(corner.x + 8, corner.y + 14);
-                ctx.lineTo(corner.x + 12, corner.y + 14);
-                ctx.stroke();
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(corner.x + 2, corner.y + 18);
-                ctx.lineTo(corner.x + 18, corner.y + 2);
-                ctx.moveTo(corner.x + 2, corner.y + 2);
-                ctx.lineTo(corner.x + 18, corner.y + 18);
-                ctx.stroke();
+                drawSkull(corner.x + 20, corner.y + 20, 20);
             });
+
+            // Add more skulls
+            drawSkull(canvas.width / 2 - 100, canvas.height / 2, 30);
+            drawSkull(canvas.width / 2 + 100, canvas.height / 2, 30);
+            drawSkull(canvas.width / 2, canvas.height / 2 - 100, 25);
+            drawSkull(canvas.width / 2, canvas.height / 2 + 100, 25);
 
             if (introIndex < introText.length) {
                 ctx.fillStyle = `rgba(255, 255, 255, ${introFade})`;
@@ -275,7 +366,7 @@
                     ctx.fillText(line, canvas.width / 2, startY + i * lineHeight);
                 });
                 introTimer += 1 / 60;
-                const duration = slideDurations[introIndex];
+                const duration = slideDurations[introIndex] || 12; // Default to 12 if undefined
                 if (introTimer <= duration / 3) {
                     introFade = introTimer / (duration / 3);
                 } else if (introTimer <= duration * 2 / 3) {
@@ -306,22 +397,29 @@
         }
 
         function skipIntro() { introIndex = introText.length; introFade = 0; introTimer = 0; introComplete = true; }
-        window.skipIntro = skipIntro;
-
         function nextSlide() { introIndex++; introFade = 0; introTimer = 0; if (introIndex >= introText.length) introComplete = true; }
-        window.nextSlide = nextSlide;
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
 
         for (let i = 0; i < 20; i++) {
             backgroundParticles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 3 + 1, speedY: Math.random() * 1 + 0.5, life: Math.random() * 2 });
         }
-        for (let i = 0; i < 150; i++) { // Øget fra 100 til 150 for mere regn på level 2
+        for (let i = 0; i < 300; i++) {
             rainDrops.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 3 + 2, speedY: Math.random() * 5 + 3 });
-        }
-        for (let i = 0; i < 150; i++) { // Øget fra 100 til 150 for mere sne på level 3
             snowFlakes.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 3 + 2, speedY: Math.random() * 2 + 1 });
+            stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 3 + 1, speedY: Math.random() * 1 + 0.5 });
+        }
+        for (let i = 0; i < 100; i++) {
+            bubbles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 10 + 5, speedY: -(Math.random() * 1 + 0.5) });
         }
         for (let i = 0; i < 30; i++) {
-            bubbles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 10 + 5, speedY: -(Math.random() * 1 + 0.5) });
+            ashParticles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 3 + 1, speedY: Math.random() * 2 + 1, life: Math.random() * 2 });
         }
 
         joystick.addEventListener('touchstart', (e) => { e.preventDefault(); joystickActive = true; joystickInner.classList.add('active'); handleJoystick(e.touches[0]); });
@@ -329,6 +427,8 @@
         joystick.addEventListener('touchend', (e) => { e.preventDefault(); joystickActive = false; joystickInner.classList.remove('active'); joystickInner.style.left = '50%'; joystickInner.style.top = '50%'; keys['ArrowLeft'] = false; keys['ArrowRight'] = false; keys['ArrowUp'] = false; keys['ArrowDown'] = false; });
         jumpButton.addEventListener('touchstart', (e) => { e.preventDefault(); keys[' '] = true; });
         jumpButton.addEventListener('touchend', (e) => { e.preventDefault(); keys[' '] = false; });
+        boostButton.addEventListener('touchstart', (e) => { e.preventDefault(); keys['Shift'] = true; });
+        boostButton.addEventListener('touchend', (e) => { e.preventDefault(); keys['Shift'] = false; });
 
         function handleJoystick(touch) {
             const rect = joystick.getBoundingClientRect();
@@ -356,6 +456,7 @@
         document.addEventListener('keyup', (e) => { keys[e.key] = false; keys[e.code] = false; });
 
         function startGame() {
+            canvas.requestFullscreen();
             const difficulty = document.getElementById('difficulty').value;
             const form = document.getElementById('playerForm').value;
             setDifficulty(difficulty);
@@ -369,16 +470,14 @@
             fadeAlpha = 0;
             update();
         }
-        window.startGame = startGame;
 
         function startFullRun() {
+            canvas.requestFullscreen();
             player.fullRun = true;
             player.level = 1;
             player.difficultyIndex = 0;
             player.form = 'mosquito';
             setDifficulty(difficulties[player.difficultyIndex]);
-            player.lives = 3;
-            player.fullRunTimer = 0;
             player.deaths = 0;
             resetPlayer();
             generateObstacles();
@@ -387,30 +486,24 @@
             fadeAlpha = 0;
             update();
         }
-        window.startFullRun = startFullRun;
 
         function setDifficulty(diff) {
             if (diff === 'easy') difficultyMultiplier = 1;
             else if (diff === 'normal') difficultyMultiplier = 1.5;
             else if (diff === 'hard') difficultyMultiplier = 2;
             else if (diff === 'speedrun') difficultyMultiplier = 2.5;
+            levelSpeed = 2 * (1 + (player.level - 1) * 0.2) * (window.innerWidth < 600 ? 1.5 : 1);
         }
 
         function resetPlayer() {
-            player.x = 400; player.y = 500; player.energy = 100; player.jumpCount = 0; player.jumping = false; player.invincibilityTimer = 0; player.jumpCooldown = 0; player.rotation = 0; player.lastDirection = 0; timeElapsed = 0; obstacles = []; projectiles = []; walls = []; particles = []; gameOver = false; collisionCooldown = 0; player.collisionBlink = 0; fadeAlpha = 0; flashTimer = 0;
+            player.x = canvas.width / 2; player.y = canvas.height - 100; player.energy = 100; player.jumpCount = 0; player.jumping = false; player.invincibilityTimer = 0; player.jumpCooldown = 0; player.rotation = 0; player.lastDirection = 0; timeElapsed = 0; obstacles = []; projectiles = []; walls = []; particles = []; gameOver = false; collisionCooldown = 0; player.collisionBlink = 0; fadeAlpha = 0; flashTimer = 0; player.dashTimer = 0;
         }
 
         function restartGame() { gameOver = false; gameOverScreen.style.display = 'none'; resetPlayer(); generateObstacles(); update(); }
-        window.restartGame = restartGame;
-
-        function backToMenu() { gameOver = false; gameStarted = false; gameOverScreen.style.display = 'none'; leaderboardScreen.style.display = 'none'; startScreen.style.display = 'block'; }
-        window.backToMenu = backToMenu;
-
+        function backToMenu() { gameOver = false; gameStarted = false; gameOverScreen.style.display = 'none'; leaderboardScreen.style.display = 'none'; howToPlayScreen.style.display = 'none'; startScreen.style.display = 'block'; document.exitFullscreen(); }
         function showLeaderboard() { startScreen.style.display = 'none'; leaderboardScreen.style.display = 'block'; leaderboardLimit = 10; updateLeaderboard(); document.getElementById('leaderboardSelect').onchange = updateLeaderboard; document.getElementById('filterEasy').onchange = updateLeaderboard; document.getElementById('filterNormal').onchange = updateLeaderboard; document.getElementById('filterHard').onchange = updateLeaderboard; document.getElementById('filterSpeedrun').onchange = updateLeaderboard; }
-        window.showLeaderboard = showLeaderboard;
-
+        function showHowToPlay() { startScreen.style.display = 'none'; howToPlayScreen.style.display = 'block'; }
         function showMoreEntries() { if (leaderboardLimit === 10) leaderboardLimit = 50; else if (leaderboardLimit === 50) leaderboardLimit = 100; updateLeaderboard(); }
-        window.showMoreEntries = showMoreEntries;
 
         function updateLeaderboard() {
             const selectedLevel = document.getElementById('leaderboardSelect').value;
@@ -421,7 +514,22 @@
             const table = document.getElementById('leaderboardTable');
             table.innerHTML = '<tr><th>Navn</th><th>Sværhedsgrad</th><th>Tid (s)</th><th>Dødsfald (Full Run)</th></tr>';
             let entries = [];
-            if (selectedLevel === 'full') {
+            if (selectedLevel === 'all') {
+                for (let diff of difficulties) {
+                    for (let lvl = 1; lvl <= 8; lvl++) {
+                        const key = `${lvl}-${diff}`;
+                        const entry = levelTimes[key];
+                        if (entry && ((diff === 'easy' && filterEasy) || (diff === 'normal' && filterNormal) || (diff === 'hard' && filterHard) || (diff === 'speedrun' && filterSpeedrun))) {
+                            entries.push({ name: entry.name, difficulty: diff, time: entry.time, deaths: '-', level: lvl });
+                        }
+                    }
+                }
+                fullRunTimes.forEach(entry => {
+                    if ((entry.difficulty === 'easy' && filterEasy) || (entry.difficulty === 'normal' && filterNormal) || (entry.difficulty === 'hard' && filterHard) || (entry.difficulty === 'speedrun' && filterSpeedrun)) {
+                        entries.push({ name: entry.name, difficulty: 'Full Run', time: entry.time, deaths: entry.deaths });
+                    }
+                });
+            } else if (selectedLevel === 'full') {
                 entries = fullRunTimes.map(entry => ({ name: entry.name, difficulty: 'Full Run', time: entry.time, deaths: entry.deaths }));
             } else {
                 for (let diff of difficulties) {
@@ -442,7 +550,7 @@
                 limitedEntries.forEach(entry => {
                     const row = document.createElement('tr');
                     let color = entry.difficulty === 'easy' ? 'green' : entry.difficulty === 'normal' ? 'blue' : entry.difficulty === 'hard' ? 'red' : entry.difficulty === 'speedrun' ? 'yellow' : 'black';
-                    row.innerHTML = `<td>${entry.name}</td><td style="color: ${color}">${entry.difficulty}</td><td>${entry.time.toFixed(2)}</td><td>${entry.deaths}</td>`;
+                    row.innerHTML = `<td>${entry.name}</td><td style="color: ${color}">${entry.difficulty}${entry.level ? ` (Level ${entry.level})` : ''}</td><td>${entry.time.toFixed(2)}</td><td>${entry.deaths}</td>`;
                     table.appendChild(row);
                 });
             }
@@ -457,7 +565,7 @@
             walls = [];
             const baseObstacles = [];
             let levelSpeedMultiplier = 1 + (player.level - 1) * 0.2;
-            levelSpeed = 2 * levelSpeedMultiplier;
+            levelSpeed = 2 * levelSpeedMultiplier * (window.innerWidth < 600 ? 1.5 : 1);
 
             if (player.level !== 5 && player.level !== 6) {
                 walls.push({ x: 0, y: 0, width: 30, height: canvas.height, type: 'Wall', size: 'large' }, { x: canvas.width - 30, y: 0, width: 30, height: canvas.height, type: 'Wall', size: 'large' });
@@ -465,76 +573,92 @@
 
             if (player.level === 1) {
                 let yPos = -50;
-                for (let i = 0; i < 15; i++) {
+                for (let i = 0; i < 20; i++) {
                     let xPos1 = 50 + (i % 3) * 400;
                     let xPos2 = 100 + ((i + 1) % 3) * 400;
                     let xPos3 = 150 + ((i + 2) % 3) * 400;
+                    let xPos4 = xPos1 + 200;
                     baseObstacles.push(
                         { x: xPos1, y: yPos, width: 120, height: 80, type: 'Angel', size: 'large', moving: true, speedX: 1 },
-                        { x: xPos2, y: yPos - 200, width: 40, height: 30, type: 'Harp', size: 'small' }, // Lidt større harpe
-                        { x: xPos3, y: yPos - 400, width: 100, height: 60, type: 'Gate', size: 'large' }
+                        { x: xPos2, y: yPos - 200, width: 40, height: 30, type: 'Harp', size: 'small' },
+                        { x: xPos3, y: yPos - 400, width: 100, height: 60, type: 'Gate', size: 'large' },
+                        { x: xPos4, y: yPos - 100, width: 50, height: 30, type: 'Angel', size: 'small', moving: true, speedX: -1 } // Added extra angel
                     );
-                    yPos -= 600;
+                    yPos -= 500;
                 }
             } else if (player.level === 2) {
                 let yPos = -50;
-                for (let i = 0; i < 25; i++) {
+                for (let i = 0; i < 30; i++) {
                     let xPos1 = 100 + (i % 3) * 200;
                     let xPos2 = 150 + ((i + 1) % 3) * 200;
                     let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    let xPos4 = xPos1 + 100;
                     baseObstacles.push(
                         { x: xPos1, y: yPos, width: 30, height: 20, type: 'Bird', size: 'small', moving: true, speedX: 2 },
                         { x: xPos2, y: yPos - 150, width: 60, height: 40, type: 'Meteor', size: 'large', moving: true, speedX: 1.5, speedY: 1.5 },
-                        { x: xPos3, y: yPos - 300, width: 100, height: 50, type: 'Airplane', size: 'large' }
+                        { x: xPos3, y: yPos - 300, width: 100, height: 50, type: 'Airplane', size: 'large' },
+                        { x: xPos4, y: yPos - 75, width: 40, height: 25, type: 'Bird', size: 'medium', moving: true, speedX: 3 } // Added extra bird
                     );
-                    yPos -= 450;
+                    yPos -= 400;
                 }
             } else if (player.level === 3) {
                 let yPos = -50;
-                for (let i = 0; i < 25; i++) {
+                for (let i = 0; i < 30; i++) {
                     let xPos1 = 100 + (i % 3) * 200;
                     let xPos2 = 150 + ((i + 1) % 3) * 200;
                     let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    let xPos4 = canvas.width - 100 - (i % 3) * 200; // Right side
+                    let xPos5 = canvas.width - 150 - ((i + 1) % 3) * 200; // Right side
+                    let xPos6 = canvas.width - 200 - ((i + 2) % 3) * 200; // Right side
+                    let xPos7 = xPos1 + 150;
                     baseObstacles.push(
-                        { x: xPos1, y: yPos, width: 100, height: 60, type: 'Rock', size: 'large' }, // Lidt større sten
+                        { x: xPos1, y: yPos, width: 100, height: 60, type: 'Rock', size: 'large' },
                         { x: xPos2, y: yPos - 150, width: 50, height: 30, type: 'Tent', size: 'medium' },
-                        { x: xPos3, y: yPos - 300, width: 40, height: 60, type: 'Climber', size: 'small', moving: true, speedX: 1 }
+                        { x: xPos3, y: yPos - 300, width: 40, height: 60, type: 'Climber', size: 'small', moving: true, speedX: 1 },
+                        { x: xPos4, y: yPos - 75, width: 100, height: 60, type: 'Rock', size: 'large' }, // Added on right
+                        { x: xPos5, y: yPos - 225, width: 50, height: 30, type: 'Tent', size: 'medium' }, // Added on right
+                        { x: xPos6, y: yPos - 375, width: 40, height: 60, type: 'Climber', size: 'small', moving: true, speedX: -1 }, // Added on right
+                        { x: xPos7, y: yPos - 225, width: 70, height: 40, type: 'Rock', size: 'medium' } // Added extra rock
                     );
-                    yPos -= 450;
+                    yPos -= 400;
                 }
             } else if (player.level === 4) {
                 let yPos = -50;
-                for (let i = 0; i < 25; i++) {
+                for (let i = 0; i < 30; i++) {
                     let xPos1 = 100 + (i % 3) * 200;
                     let xPos2 = 150 + ((i + 1) % 3) * 200;
                     let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    let xPos4 = xPos1 + 50;
                     baseObstacles.push(
                         { x: xPos1, y: yPos, width: 100, height: 50, type: 'Car', size: 'large', moving: true, speedX: 3 },
-                        { x: xPos2, y: yPos - 150, width: 30, height: 50, type: 'Pedestrian', size: 'small', moving: true, speedX: 1 }, // Større personer
-                        { x: xPos3, y: yPos - 300, width: 60, height: 80, type: 'Building', size: 'large' }
+                        { x: xPos2, y: yPos - 150, width: 30, height: 50, type: 'Pedestrian', size: 'small', moving: true, speedX: 1 },
+                        { x: xPos3, y: yPos - 300, width: 60, height: 80, type: 'Building', size: 'large' },
+                        { x: xPos4, y: yPos - 75, width: 80, height: 40, type: 'Car', size: 'medium', moving: true, speedX: 4 } // Added extra car
                     );
-                    yPos -= 450;
+                    yPos -= 400;
                 }
             } else if (player.level === 5) {
                 let yPos = -200;
-                for (let i = 0; i < 25; i++) {
+                for (let i = 0; i < 30; i++) {
                     let xPos1 = 100 + (i % 3) * 200;
                     let xPos2 = 150 + ((i + 1) % 3) * 200;
+                    let xPos3 = xPos1 + 100;
                     baseObstacles.push(
-                        { x: xPos1, y: yPos, width: 30, height: 20, type: 'Fish', size: 'small', moving: true, speedX: 2 },
-                        { x: xPos2, y: yPos - 150, width: 120, height: 60, type: 'Shark', size: 'large', moving: true, speedX: 1.5 }
+                        { x: xPos1, y: yPos, width: 30, height: 20, type: 'Fish', size: 'small', moving: true, speedX: (i % 2 === 0 ? 2 : -2) },
+                        { x: xPos2, y: yPos - 150, width: 120, height: 60, type: 'Shark', size: 'large', moving: true, speedX: (i % 2 === 0 ? 1.5 : -1.5) },
+                        { x: xPos3, y: yPos - 75, width: 50, height: 30, type: 'Fish', size: 'medium', moving: true, speedX: (i % 2 === 0 ? 3 : -3) } // Added extra fish
                     );
-                    yPos -= 300;
+                    yPos -= 250;
                 }
             } else if (player.level === 6) {
-                let pathWidth = difficultyMultiplier === 1 ? 200 : difficultyMultiplier === 1.5 ? 150 : difficultyMultiplier === 2 ? 100 : 80;
+                let pathWidth = difficultyMultiplier === 1 ? 250 : difficultyMultiplier === 1.5 ? 200 : difficultyMultiplier === 2 ? 150 : difficultyMultiplier === 2.5 ? 120 : 100; // Increased for speedrun
                 let centerX = canvas.width / 2;
                 let yPos = -50;
                 let amplitude = 300;
                 let frequency = 0.1;
-                let stoneLineCount = difficultyMultiplier === 1 ? 4 : Math.floor(difficultyMultiplier * 6);
+                let stoneLineCount = difficultyMultiplier === 1 ? 3 : Math.floor(difficultyMultiplier * 5); // Reduced for easier
                 let stoneLineAdded = 0;
-                for (let i = 0; i < 90; i++) {
+                for (let i = 0; i < 70; i++) { // Reduced from 90 for easier
                     let offset = amplitude * Math.sin(i * frequency * Math.PI);
                     centerX = (canvas.width / 2) + offset;
                     if (centerX - pathWidth < 0) centerX = pathWidth;
@@ -543,53 +667,66 @@
                         { x: 0, y: yPos, width: centerX - pathWidth, height: 30, type: 'Wall', size: 'large' },
                         { x: centerX + pathWidth, y: yPos, width: canvas.width - (centerX + pathWidth), height: 30, type: 'Wall', size: 'large' }
                     );
-                    if (difficultyMultiplier === 1 && (i === 20 || i === 60)) {
+                    if (difficultyMultiplier === 1 && (i % 25 === 0)) { // Less frequent
                         let stoneX = centerX - pathWidth / 4;
                         obstacles.push({ x: stoneX, y: yPos, width: 40, height: 20, type: 'Rock', size: 'small', speed: levelSpeed });
-                    } else if (difficultyMultiplier > 1 && i % 10 === 0) {
+                    } else if (difficultyMultiplier > 1 && i % 15 === 0) {
                         let stoneX = centerX - pathWidth / 4;
                         obstacles.push({ x: stoneX, y: yPos, width: 40, height: 20, type: 'Rock', size: 'small', speed: levelSpeed });
                     }
-                    if (stoneLineAdded < stoneLineCount && i === Math.floor(90 / (stoneLineCount + 1)) * (stoneLineAdded + 1)) {
+                    if (stoneLineAdded < stoneLineCount && i === Math.floor(70 / (stoneLineCount + 1)) * (stoneLineAdded + 1)) {
                         let startX = centerX - pathWidth;
-                        for (let x = startX; x < centerX + pathWidth; x += 15) {
+                        for (let x = startX; x < centerX + pathWidth; x += 20) { // Wider spacing for easier
                             obstacles.push({ x: x, y: yPos, width: 10, height: 10, type: 'StoneDots', size: 'small', speed: levelSpeed });
-                            obstacles.push({ x: x + 5, y: yPos + 5, width: 10, height: 10, type: 'StoneDots', size: 'small', speed: levelSpeed }); // Anden række
+                            obstacles.push({ x: x + 5, y: yPos + 5, width: 10, height: 10, type: 'StoneDots', size: 'small', speed: levelSpeed });
                         }
                         stoneLineAdded++;
                     }
-                    yPos -= 50;
+                    yPos -= 60; // Increased spacing for easier
                 }
             } else if (player.level === 7) {
                 let yPos = -50;
-                for (let i = 0; i < 15; i++) {
+                let numLoops = (difficultyMultiplier === 2.5) ? 15 : 20;
+                for (let i = 0; i < numLoops; i++) {
                     let xPos1 = 100 + (i % 3) * 200;
                     let xPos2 = 150 + ((i + 1) % 3) * 200;
                     let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    let xPos4 = canvas.width - 100 - (i % 3) * 200; // Right side
+                    let xPos5 = canvas.width - 150 - ((i + 1) % 3) * 200; // Right side
+                    let xPos6 = canvas.width - 200 - ((i + 2) % 3) * 200; // Right side
+                    let xPos7 = xPos1 + 100;
                     baseObstacles.push(
                         { x: xPos1, y: yPos, width: 30, height: 30, type: 'Demon', size: 'small', shooting: true, shootType: 'horizontal' },
                         { x: xPos2, y: yPos - 200, width: 80, height: 50, type: 'Devil', size: 'large', shooting: true, shootType: 'pitchfork' },
-                        { x: xPos3, y: yPos - 400, width: 50, height: 30, type: 'Flame', size: 'medium' }
+                        { x: xPos3, y: yPos - 400, width: 50, height: 30, type: 'Flame', size: 'medium' },
+                        { x: xPos4, y: yPos, width: 30, height: 30, type: 'Demon', size: 'small', shooting: true, shootType: 'horizontal' }, // Added on right
+                        { x: xPos5, y: yPos - 200, width: 80, height: 50, type: 'Devil', size: 'large', shooting: true, shootType: 'pitchfork' }, // Added on right
+                        { x: xPos6, y: yPos - 400, width: 50, height: 30, type: 'Flame', size: 'medium' }, // Added on right
+                        { x: xPos7, y: yPos - 100, width: 40, height: 40, type: 'Demon', size: 'medium', shooting: true, shootType: 'horizontal' } // Added extra demon
                     );
-                    yPos -= 600;
+                    yPos -= 500;
                 }
                 baseObstacles.push({ x: canvas.width - 150, y: -9000, width: 150, height: 500, type: 'FinalDevil', size: 'boss', shooting: true, shootType: 'tripleFire' });
             } else if (player.level === 8) {
                 let yPos = -50;
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < 25; i++) {
                     let xPos1 = 100 + (i % 3) * 200;
                     let xPos2 = 150 + ((i + 1) % 3) * 200;
                     let xPos3 = 200 + ((i + 2) % 3) * 200;
+                    let xPos4 = xPos1 + 100;
+                    let xPos5 = 250 + ((i + 3) % 3) * 200;
                     baseObstacles.push(
                         { x: xPos1, y: yPos, width: 20, height: 10, type: 'ShootingStar', size: 'small', moving: true, speedX: i % 2 === 0 ? 5 : -5 },
-                        { x: xPos2, y: yPos - 150, width: 15, height: 15, type: 'Asteroid', size: 'small', moving: true, speedX: i % 2 === 0 ? 2 : -2 }
+                        { x: xPos2, y: yPos - 150, width: 15, height: 15, type: 'Asteroid', size: 'small', moving: true, speedX: i % 2 === 0 ? 2 : -2 },
+                        { x: xPos4, y: yPos - 75, width: 25, height: 15, type: 'ShootingStar', size: 'medium', moving: true, speedX: i % 2 === 0 ? 6 : -6 }, // Added extra shooting star
+                        { x: xPos5, y: yPos - 200, width: 70, height: 50, type: 'Meteor', size: 'large', moving: true, speedX: 1.2, speedY: 1.2 }
                     );
-                    for (let x = 30; x < canvas.width - 30; x += 20) {
+                    for (let x = 30; x < canvas.width - 30; x += 15) {
                         obstacles.push({ x: x, y: yPos - 300, width: 10, height: 10, type: 'AsteroidBelt', size: 'small', speed: levelSpeed });
                     }
-                    yPos -= 450;
+                    yPos -= 400;
                 }
-                for (let i = 0; i < 30; i++) {
+                for (let i = 0; i < 40; i++) {
                     baseObstacles.push({ x: 100 + (i % 5) * 150, y: -50 - (i % 10) * 200, width: 10, height: 10, type: 'Star', size: 'small', speed: levelSpeed });
                 }
             }
@@ -630,13 +767,29 @@
                 }
             }
 
+            if ((keys['Shift'] || keys['ShiftLeft'] || keys['ShiftRight']) && player.energy >= 50 && player.dashTimer <= 0) {
+                player.dashTimer = 1;
+                player.energy -= 50;
+                player.x += player.lastDirection * 50;
+                for (let i = 0; i < 10; i++) {
+                    particles.push({ x: player.x + player.width / 2, y: player.y + player.height / 2, size: 3, speedX: (Math.random() - 0.5) * 5, speedY: -2, life: 0.5, color: 'yellow' });
+                }
+            }
+
             if (player.invincibilityTimer > 0) {
                 player.invincibilityTimer -= 1 / 60;
                 player.rotation += (2 * Math.PI) / 60;
-                if (player.invincibilityTimer <= 0) { player.jumping = false; player.invincibilityTimer = 0; player.rotation = 0; player.jumpCount = 0; player.jumpCooldown = 2; }
+                if (player.invincibilityTimer <= 0) { player.jumping = false; player.invincibilityTimer = 0; player.rotation = 0; player.jumpCooldown = 2; }
             }
 
             if (player.jumpCooldown > 0) player.jumpCooldown -= 1 / 60;
+            if (player.dashTimer > 0) {
+                player.dashTimer -= 1 / 60;
+                speedModifier *= 2;
+                obstacles.forEach(obs => obs.y += obs.speed);
+                walls.forEach(wall => wall.y += levelSpeed);
+                projectiles.forEach(proj => proj.y += proj.speedY ? proj.speedY * 2 : levelSpeed);
+            }
 
             if (player.level === 5) {
                 if (player.x < 0) player.x = 0;
@@ -647,7 +800,7 @@
             }
 
             energyRegenTimer += 1 / 60;
-            if (energyRegenTimer >= 2) { player.energy = 100; energyRegenTimer = 0; }
+            if (energyRegenTimer >= 2) { player.energy = Math.min(player.energy + 50, 100); energyRegenTimer = 0; }
 
             let allObstaclesPassed = true;
             let obstaclesToRemove = [];
@@ -691,7 +844,7 @@
             let projectilesToRemove = [];
             projectiles.forEach((proj, index) => {
                 proj.x += proj.speedX * speedModifier;
-                proj.y += proj.speedY * speedModifier;
+                proj.y += (proj.speedY || 0) * speedModifier;
                 if (proj.x < 0 || proj.x > canvas.width || proj.y > canvas.height) projectilesToRemove.push(index);
                 if (player.invincibilityTimer <= 0 && collisionCooldown <= 0 && player.x < proj.x + proj.width && player.x + player.width > proj.x && player.y < proj.y + proj.height && player.y + player.height > proj.y) handleCollision();
             });
@@ -703,6 +856,8 @@
             rainDrops.forEach(drop => { drop.y += drop.speedY; if (drop.y > canvas.height) { drop.y = -drop.size; drop.x = Math.random() * canvas.width; } });
             snowFlakes.forEach(flake => { flake.y += flake.speedY; if (flake.y > canvas.height) { flake.y = -flake.size; flake.x = Math.random() * canvas.width; } });
             bubbles.forEach(bubble => { bubble.y += bubble.speedY; if (bubble.y < 0) { bubble.y = canvas.height + bubble.size; bubble.x = Math.random() * canvas.width; } });
+            stars.forEach(star => { star.y += star.speedY; if (star.y > canvas.height) { star.y = -star.size; star.x = Math.random() * canvas.width; } });
+            ashParticles.forEach(ash => { ash.y -= ash.speedY; if (ash.y < 0) { ash.y = canvas.height + ash.size; ash.x = Math.random() * canvas.width; } });
 
             if (collisionCooldown > 0) { collisionCooldown -= 1 / 60; player.collisionBlink = Math.sin(Date.now() * 0.01) > 0 ? 1 : 0; } else player.collisionBlink = 0;
             if (fadeAlpha < 1) fadeAlpha += 0.02;
@@ -716,6 +871,7 @@
                 if (!levelTimes[timeKey] || timeElapsed < levelTimes[timeKey].time) {
                     levelTimes[timeKey] = { name: player.name, time: timeElapsed };
                     localStorage.setItem('levelTimes', JSON.stringify(levelTimes));
+                    localStorage.setItem('playerData', JSON.stringify({ name: player.name, progress: { levelTimes, fullRunTimes } }));
                 }
                 if (player.fullRun) {
                     player.level++;
@@ -723,8 +879,9 @@
                         player.level = 1;
                         player.difficultyIndex++;
                         if (player.difficultyIndex >= difficulties.length) {
-                            fullRunTimes.push({ name: player.name, time: player.fullRunTimer, deaths: player.deaths });
+                            fullRunTimes.push({ name: player.name, time: player.fullRunTimer, deaths: player.deaths, difficulty: difficulties[player.difficultyIndex - 1] });
                             localStorage.setItem('fullRunTimes', JSON.stringify(fullRunTimes));
+                            localStorage.setItem('playerData', JSON.stringify({ name: player.name, progress: { levelTimes, fullRunTimes } }));
                             alert(`Full Run gennemført! Tid: ${player.fullRunTimer.toFixed(2)}s, Dødsfald: ${player.deaths}`);
                             gameOver = true;
                             document.getElementById('finalTime').innerText = player.fullRunTimer.toFixed(2);
@@ -740,7 +897,7 @@
                     gameOver = true;
                     document.getElementById('finalTime').innerText = timeElapsed.toFixed(2);
                     gameOverScreen.style.display = 'block';
-                    if (player.level === 1) flashTimer = 0.5; // Lysglimt ved afslutning af level 1
+                    if (player.level === 1) flashTimer = 0.5;
                     for (let i = 0; i < 20; i++) {
                         particles.push({ x: canvas.width / 2, y: 0, size: 5, speedX: (Math.random() - 0.5) * 5, speedY: Math.random() * 5, life: 1, color: 'yellow' });
                     }
@@ -758,22 +915,16 @@
 
         function handleCollision() {
             if (player.fullRun) {
-                player.lives--;
                 player.deaths++;
-                if (player.lives <= 0) {
-                    gameOver = true;
-                    document.getElementById('finalTime').innerText = player.fullRunTimer.toFixed(2);
-                    gameOverScreen.style.display = 'block';
-                } else {
-                    player.x = 400; player.y = 500; player.energy = 100; player.jumping = false; player.jumpCount = 0; player.invincibilityTimer = 0; player.jumpCooldown = 0; player.rotation = 0; timeElapsed = 0; projectiles = []; collisionCooldown = 1; shakeTimer = 0.5; generateObstacles();
-                    for (let i = 0; i < 15; i++) {
-                        particles.push({ x: player.x + player.width / 2, y: player.y + player.height / 2, size: 3, speedX: (Math.random() - 0.5) * 5, speedY: (Math.random() - 0.5) * 5, life: 0.5, color: player.level === 5 ? 'blue' : player.level === 7 ? 'red' : 'gray' });
-                    }
+                player.x = canvas.width / 2; player.y = canvas.height - 100; player.energy = 100; player.jumping = false; player.jumpCount = 0; player.invincibilityTimer = 0; player.jumpCooldown = 0; player.rotation = 0; timeElapsed = 0; projectiles = []; collisionCooldown = 1; shakeTimer = 0.5; generateObstacles();
+                for (let i = 0; i < 15; i++) {
+                    particles.push({ x: player.x + player.width / 2, y: player.y + player.height / 2, size: 3, speedX: (Math.random() - 0.5) * 5, speedY: (Math.random() - 0.5) * 5, life: 0.5, color: player.level === 5 ? 'blue' : player.level === 7 ? 'red' : 'gray' });
                 }
             } else {
                 gameOver = true;
                 document.getElementById('finalTime').innerText = timeElapsed.toFixed(2);
                 gameOverScreen.style.display = 'block';
+                setTimeout(backToMenu, 2000);
                 shakeTimer = 0.5;
             }
         }
@@ -790,12 +941,31 @@
 
             let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
             switch (player.level) {
-                case 1: gradient.addColorStop(0, 'lightblue'); gradient.addColorStop(1, 'white'); break;
-                case 2: gradient.addColorStop(0, 'skyblue'); gradient.addColorStop(1, 'lightgray'); break;
-                case 3: gradient.addColorStop(0, 'white'); gradient.addColorStop(0.5, 'lightgray'); gradient.addColorStop(1, 'gray'); break;
-                case 4: gradient.addColorStop(0, 'lightgray'); gradient.addColorStop(1, '#4A4A4A'); break;
-                case 5: gradient.addColorStop(0, 'blue'); gradient.addColorStop(1, 'darkblue'); break;
-                case 6: gradient.addColorStop(0, '#4A2F1A'); gradient.addColorStop(1, '#2F1C0F'); break;
+                case 1: 
+                    gradient.addColorStop(0, '#87CEEB'); 
+                    gradient.addColorStop(1, '#FFFFFF'); 
+                    break;
+                case 2: 
+                    gradient.addColorStop(0, '#87CEFA'); 
+                    gradient.addColorStop(1, '#D3D3D3'); 
+                    break;
+                case 3: 
+                    gradient.addColorStop(0, '#FFFFFF'); 
+                    gradient.addColorStop(0.5, '#D3D3D3'); 
+                    gradient.addColorStop(1, '#808080'); 
+                    break;
+                case 4: 
+                    gradient.addColorStop(0, '#D3D3D3'); 
+                    gradient.addColorStop(1, '#4A4A4A'); 
+                    break;
+                case 5: 
+                    gradient.addColorStop(0, '#0000FF'); 
+                    gradient.addColorStop(1, '#00008B'); 
+                    break;
+                case 6: 
+                    gradient.addColorStop(0, '#4A2F1A'); 
+                    gradient.addColorStop(1, '#2F1C0F'); 
+                    break;
                 case 7: const pulse = Math.sin(animationFrame * 0.05) * 0.1 + 0.9; gradient.addColorStop(0, `rgba(255, 0, 0, ${pulse})`); gradient.addColorStop(1, `rgba(139, 0, 0, ${pulse})`); break;
                 case 8: gradient.addColorStop(0, 'black'); gradient.addColorStop(1, 'black'); break;
             }
@@ -803,11 +973,12 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             if (player.level === 1) {
+                // Heavenly glow: soft yellow rays and clouds
                 ctx.shadowBlur = 20;
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+                ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
                 for (let i = 0; i < 6; i++) {
                     const angle = (i * Math.PI / 3) + (animationFrame * 0.01);
-                    ctx.fillStyle = `rgba(255, 255, ${Math.sin(animationFrame * 0.05) * 50 + 200}, 0.3)`;
+                    ctx.fillStyle = `rgba(255, 215, 0, 0.3)`;
                     ctx.beginPath();
                     ctx.moveTo(canvas.width / 2, canvas.height / 2);
                     ctx.lineTo(canvas.width / 2 + Math.cos(angle) * canvas.width, canvas.height / 2 + Math.sin(angle) * canvas.height);
@@ -815,93 +986,266 @@
                     ctx.closePath();
                     ctx.fill();
                 }
+                // Add soft clouds
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                for (let i = 0; i < 5; i++) {
+                    let cloudX = (backgroundOffset * 0.2 + i * 100 + Math.sin(animationFrame * 0.01 + i) * 20) % canvas.width;
+                    let cloudY = (backgroundOffset * 0.1 + i * 50 + Math.cos(animationFrame * 0.02 + i) * 10) % canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(cloudX, cloudY, 30, 0, Math.PI * 2);
+                    ctx.arc(cloudX + 20, cloudY - 10, 20, 0, Math.PI * 2);
+                    ctx.arc(cloudX + 40, cloudY, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Optimized: Add more floating clouds for liveliness
+                for (let i = 5; i < 10; i++) {
+                    let cloudX = (backgroundOffset * 0.15 + i * 80 + Math.cos(animationFrame * 0.015 + i) * 25) % canvas.width;
+                    let cloudY = (backgroundOffset * 0.05 + i * 60 + Math.sin(animationFrame * 0.025 + i) * 15) % canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(cloudX, cloudY, 35, 0, Math.PI * 2);
+                    ctx.arc(cloudX + 25, cloudY - 15, 25, 0, Math.PI * 2);
+                    ctx.arc(cloudX + 45, cloudY, 30, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 ctx.shadowBlur = 0;
+                // Flickering light overlay
+                const flickerAlpha = Math.abs(Math.sin(animationFrame * 0.1)) * 0.6;
+                ctx.fillStyle = `rgba(255, 255, 255, ${flickerAlpha})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Add sparkling stars in heaven
+                ctx.fillStyle = 'yellow';
+                for (let i = 0; i < 20; i++) {
+                    let starX = Math.random() * canvas.width;
+                    let starY = Math.random() * canvas.height;
+                    let twinkle = Math.sin(animationFrame * 0.05 + i) * 0.5 + 0.5;
+                    ctx.beginPath();
+                    ctx.arc(starX, starY, 1 + twinkle, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             } else if (player.level === 2) {
-                // Bevægelige og vilkårlige skyer
+                // Enhanced clouds with more layers
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-                for (let i = 0; i < 10; i++) {
+                for (let i = 0; i < 15; i++) {
                     let cloudX = (backgroundOffset * 0.3 + i * 80 + Math.sin(animationFrame * 0.02 + i) * 50) % canvas.width;
                     let cloudY = (backgroundOffset * 0.2 + i * 60 + Math.cos(animationFrame * 0.01 + i) * 30) % canvas.height;
                     ctx.beginPath();
                     ctx.arc(cloudX, cloudY, 40, 0, Math.PI * 2);
                     ctx.arc(cloudX + 30, cloudY - 20, 30, 0, Math.PI * 2);
                     ctx.arc(cloudX + 60, cloudY, 35, 0, Math.PI * 2);
+                    ctx.arc(cloudX + 20, cloudY + 10, 25, 0, Math.PI * 2);
                     ctx.fill();
                 }
+                // Optimized: Add denser rain and fog effect
                 ctx.fillStyle = 'rgba(0, 0, 255, 0.3)';
                 rainDrops.forEach(drop => { ctx.fillRect(drop.x, drop.y, drop.size / 2, drop.size); });
                 backgroundParticles.forEach(p => { ctx.fillStyle = `rgba(0, 0, 255, ${p.life * 0.5})`; ctx.fillRect(p.x, p.y, p.size, p.size * 2); });
+                // Fog layer
+                ctx.fillStyle = 'rgba(211, 211, 211, 0.3)';
+                ctx.fillRect(0, canvas.height * 0.8, canvas.width, canvas.height * 0.2);
+                // Add lightning flashes occasionally
+                if (Math.random() < 0.05) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
             } else if (player.level === 3) {
+                // Enhanced mountain with more jagged lines and snow caps
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
                 ctx.beginPath();
                 ctx.moveTo(0, canvas.height * 0.7);
                 for (let x = 0; x < canvas.width; x += 50) {
-                    ctx.lineTo(x, canvas.height * 0.7 - (Math.sin(x * 0.02 + backgroundOffset * 0.01) * 100));
+                    ctx.lineTo(x, canvas.height * 0.7 - (Math.sin(x * 0.02 + backgroundOffset * 0.01) * 100) - Math.random() * 20);
                 }
                 ctx.lineTo(canvas.width, canvas.height);
                 ctx.lineTo(0, canvas.height);
                 ctx.closePath();
                 ctx.fill();
+                // Add snow caps
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height * 0.6);
+                for (let x = 0; x < canvas.width; x += 50) {
+                    ctx.lineTo(x, canvas.height * 0.6 - (Math.sin(x * 0.03 + backgroundOffset * 0.01) * 50));
+                }
+                ctx.lineTo(canvas.width, canvas.height * 0.6);
+                ctx.lineTo(0, canvas.height * 0.6);
+                ctx.fill();
+                // Optimized: Add wind-swept snow particles and ice reflections
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
                 snowFlakes.forEach(flake => { ctx.beginPath(); ctx.arc(flake.x, flake.y, flake.size / 2, 0, Math.PI * 2); ctx.fill(); });
                 backgroundParticles.forEach(p => { ctx.fillStyle = `rgba(255, 255, 255, ${p.life * 0.8})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
+                // Ice reflections
+                ctx.fillStyle = 'rgba(173, 216, 230, 0.4)';
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height * 0.7);
+                for (let x = 0; x < canvas.width; x += 50) {
+                    ctx.lineTo(x, canvas.height * 0.7 + Math.cos(x * 0.02 + backgroundOffset * 0.01) * 20);
+                }
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.lineTo(0, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+                // Add mountain textures
+                ctx.strokeStyle = 'darkgray';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 20; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(Math.random() * canvas.width, canvas.height * 0.7 + Math.random() * canvas.height * 0.3);
+                    ctx.lineTo(Math.random() * canvas.width, canvas.height * 0.7 + Math.random() * canvas.height * 0.3);
+                    ctx.stroke();
+                }
             } else if (player.level === 4) {
-                ctx.fillStyle = 'rgba(139, 69, 19, 0.3)';
+                // Enhanced city ground and buildings with more details, repeated across the map
+                ctx.fillStyle = 'rgba(139, 69, 19, 0.5)';
                 ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
-                for (let i = 0; i < 5; i++) {
+                // Add road lines
+                ctx.strokeStyle = 'yellow';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height - 25);
+                ctx.lineTo(canvas.width, canvas.height - 25);
+                ctx.stroke();
+                for (let i = 0; i < Math.ceil(canvas.width / 150) + 1; i++) { // Repeat buildings across the screen
                     ctx.fillStyle = 'gray';
                     let buildingHeight = 150 + Math.sin(i * 0.5) * 50;
-                    ctx.fillRect(50 + i * 150, canvas.height - buildingHeight - (backgroundOffset % 100), 100, buildingHeight);
+                    let buildY = canvas.height - buildingHeight - (backgroundOffset % 100);
+                    ctx.fillRect(50 + i * 150, buildY, 100, buildingHeight);
+                    // Add windows
                     ctx.fillStyle = 'yellow';
-                    ctx.font = '20px Roboto';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('NETTO', 100 + i * 150, canvas.height - buildingHeight - (backgroundOffset % 100) + 25);
-                    for (let j = 0; j < 3; j++) {
-                        ctx.fillRect(60 + i * 150 + j * 30, canvas.height - buildingHeight - (backgroundOffset % 100) + 50, 20, 30);
+                    for (let j = 0; j < Math.floor(buildingHeight / 30); j++) {
+                        for (let k = 0; k < 3; k++) {
+                            ctx.fillRect(60 + i * 150 + k * 30, buildY + 10 + j * 30, 20, 20);
+                        }
                     }
+                    // Add roof details
+                    ctx.fillStyle = 'darkgray';
+                    ctx.beginPath();
+                    ctx.moveTo(50 + i * 150, buildY);
+                    ctx.lineTo(150 + i * 150, buildY);
+                    ctx.lineTo(100 + i * 150, buildY - 20);
+                    ctx.fill();
+                    // Optimized: Add streetlights and shadows
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(40 + i * 150, buildY + buildingHeight - 50, 5, 50);
+                    ctx.fillStyle = 'yellow';
+                    ctx.beginPath();
+                    ctx.arc(42.5 + i * 150, buildY + buildingHeight - 55, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Building shadow
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    ctx.fillRect(150 + i * 150, buildY, 20, buildingHeight);
                 }
-                // Ekstra byeffekter over bygningerne
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-                for (let i = 0; i < 3; i++) {
-                    ctx.fillRect(100 + i * 200, canvas.height - 250 - (backgroundOffset % 50), 80, 100); // Højere bygninger
+                // Add city lights twinkling
+                ctx.fillStyle = 'yellow';
+                for (let i = 0; i < 50; i++) {
+                    let lightX = Math.random() * canvas.width;
+                    let lightY = canvas.height * 0.5 + Math.random() * canvas.height * 0.5;
+                    let twinkle = Math.sin(animationFrame * 0.05 + i) * 0.5 + 0.5;
+                    ctx.beginPath();
+                    ctx.arc(lightX, lightY, 1 + twinkle, 0, Math.PI * 2);
+                    ctx.fill();
                 }
             } else if (player.level === 5) {
-                // Bevægelige bølger
+                // Enhanced water with waves and bubbles
                 const waveOffset = Math.sin(animationFrame * 0.05) * 20;
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                for (let i = 0; i < 8; i++) {
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 10; i++) {
                     let waveY = (backgroundOffset * 0.5 + i * 50 + waveOffset) % canvas.height;
                     ctx.beginPath();
                     ctx.moveTo(0, waveY);
-                    ctx.quadraticCurveTo(200, waveY - 20, 400, waveY);
-                    ctx.quadraticCurveTo(600, waveY + 20, 800, waveY);
+                    ctx.quadraticCurveTo(canvas.width / 4, waveY - 20, canvas.width / 2, waveY);
+                    ctx.quadraticCurveTo(canvas.width * 3 / 4, waveY + 20, canvas.width, waveY);
                     ctx.stroke();
                 }
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
                 bubbles.forEach(bubble => { ctx.beginPath(); ctx.arc(bubble.x, bubble.y, bubble.size / 2, 0, Math.PI * 2); ctx.fill(); });
+                // Optimized: Add underwater light rays and algae
+                ctx.fillStyle = 'rgba(0, 191, 255, 0.1)';
+                for (let i = 0; i < 5; i++) {
+                    const rayX = i * (canvas.width / 5);
+                    ctx.beginPath();
+                    ctx.moveTo(rayX, 0);
+                    ctx.lineTo(rayX - 50, canvas.height);
+                    ctx.lineTo(rayX + 50, canvas.height);
+                    ctx.fill();
+                }
+                // Algae
+                ctx.strokeStyle = 'darkgreen';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 10; i++) {
+                    let algaeX = i * (canvas.width / 10) + Math.sin(animationFrame * 0.01 + i) * 5;
+                    ctx.beginPath();
+                    ctx.moveTo(algaeX, canvas.height);
+                    ctx.quadraticCurveTo(algaeX + 10, canvas.height - 50, algaeX, canvas.height - 100);
+                    ctx.stroke();
+                }
+                // Add fish schools in background
+                ctx.fillStyle = 'rgba(0, 0, 255, 0.2)';
+                for (let i = 0; i < 10; i++) {
+                    let fishX = (backgroundOffset * 0.8 + i * 50 + Math.sin(animationFrame * 0.03 + i) * 10) % canvas.width;
+                    let fishY = canvas.height * 0.6 + Math.sin(animationFrame * 0.02 + i) * 20;
+                    ctx.beginPath();
+                    ctx.arc(fishX, fishY, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             } else if (player.level === 6) {
+                // Enhanced underground with layers and cracks
                 ctx.fillStyle = 'rgba(139, 69, 19, 0.5)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = 'rgba(50, 30, 20, 0.8)';
-                for (let i = 0; i < 10; i++) {
+                for (let i = 0; i < 15; i++) {
                     let y = (backgroundOffset * 0.5 + i * 80) % canvas.height;
                     ctx.fillRect(0, y, canvas.width, 20);
+                    // Add cracks
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.random() * canvas.width, y);
+                    ctx.lineTo(Math.random() * canvas.width, y + 20);
+                    ctx.stroke();
                 }
-                ctx.fillStyle = 'rgba(100, 50, 30, 0.6)';
+                // Optimized: Add glowing crystals and dripping water
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
+                for (let i = 0; i < 8; i++) {
+                    let crystalX = (backgroundOffset * 0.2 + i * 100) % canvas.width;
+                    let crystalY = (backgroundOffset * 0.1 + Math.sin(animationFrame * 0.01 + i) * 20) % canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(crystalX, crystalY);
+                    ctx.lineTo(crystalX - 10, crystalY + 20);
+                    ctx.lineTo(crystalX + 10, crystalY + 20);
+                    ctx.fill();
+                }
+                // Dripping water
+                ctx.fillStyle = 'blue';
+                for (let i = 0; i < 20; i++) {
+                    let dropX = Math.random() * canvas.width;
+                    let dropY = (backgroundOffset * 2 + i * 50) % canvas.height;
+                    ctx.fillRect(dropX, dropY, 2, 10);
+                }
+                // Add mineral veins
+                ctx.strokeStyle = 'gold';
+                ctx.lineWidth = 3;
                 for (let i = 0; i < 5; i++) {
-                    let y = (backgroundOffset * 0.7 + i * 150) % canvas.height;
-                    ctx.fillRect(20, y, 10, 100);
-                    ctx.fillRect(canvas.width - 30, y, 10, 100);
+                    let veinX = Math.random() * canvas.width;
+                    let veinY = Math.random() * canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(veinX, veinY);
+                    ctx.quadraticCurveTo(veinX + 50, veinY + 20, veinX + 100, veinY);
+                    ctx.stroke();
                 }
-                // Ekstra jorddetaljer
-                ctx.fillStyle = 'rgba(80, 40, 20, 0.4)';
-                for (let i = 0; i < 6; i++) {
-                    ctx.fillRect(50 + i * 120, canvas.height - 100 - (backgroundOffset % 60), 60, 40);
+                // Add cave echoes (subtle gradients)
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                for (let i = 0; i < 3; i++) {
+                    let echoX = Math.random() * canvas.width;
+                    let echoY = Math.random() * canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(echoX, echoY, 50 + Math.random() * 50, 0, Math.PI * 2);
+                    ctx.fill();
                 }
             } else if (player.level === 7) {
-                // Flammer i baggrunden
+                // Enhanced hell with flames and lava
                 ctx.fillStyle = 'rgba(255, 165, 0, 0.3)';
-                for (let i = 0; i < 10; i++) {
+                for (let i = 0; i < 15; i++) {
                     let flameY = (backgroundOffset * 0.5 + i * 100) % canvas.height;
                     ctx.beginPath();
                     ctx.arc(100 + i * 70, flameY, 30, 0, Math.PI * 2);
@@ -910,22 +1254,85 @@
                 ctx.shadowBlur = 10;
                 ctx.shadowColor = 'rgba(255, 69, 0, 0.5)';
                 ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 7; i++) {
                     let flameY = canvas.height * 0.7 - (Math.sin(i * 0.5 + backgroundOffset * 0.01) * 100);
                     ctx.beginPath();
                     ctx.moveTo(50 + i * 150, canvas.height);
                     ctx.lineTo(100 + i * 150, flameY - 50);
                     ctx.lineTo(150 + i * 150, canvas.height);
                     ctx.fill();
+                    // Add smaller flames
+                    ctx.beginPath();
+                    ctx.moveTo(70 + i * 150, canvas.height);
+                    ctx.lineTo(100 + i * 150, flameY - 30);
+                    ctx.lineTo(130 + i * 150, canvas.height);
+                    ctx.fill();
                 }
                 ctx.shadowBlur = 0;
+                // Optimized: Add smoke particles and lava bubbles
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                for (let i = 0; i < 20; i++) {
+                    let smokeX = Math.random() * canvas.width;
+                    let smokeY = (backgroundOffset * 1.5 + i * 50 + Math.sin(animationFrame * 0.02 + i) * 10) % canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(smokeX, smokeY, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Lava bubbles
+                ctx.fillStyle = 'orange';
+                for (let i = 0; i < 10; i++) {
+                    let bubbleX = Math.random() * canvas.width;
+                    let bubbleY = canvas.height - (backgroundOffset * 0.8 + i * 30) % 100;
+                    let bubbleSize = Math.sin(animationFrame * 0.05 + i) * 5 + 10;
+                    ctx.beginPath();
+                    ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Add ash particles
+                ctx.fillStyle = 'gray';
+                ashParticles.forEach(ash => { ctx.beginPath(); ctx.arc(ash.x, ash.y, ash.size / 2, 0, Math.PI * 2); ctx.fill(); });
             } else if (player.level === 8) {
-                // Færre, tydeligere stjerner
+                // Enhanced void with twinkling stars
                 ctx.fillStyle = 'white';
-                for (let i = 0; i < 20; i++) { // Reduceret fra 50 til 20
-                    let starX = Math.random() * canvas.width;
-                    let starY = Math.random() * canvas.height;
-                    ctx.fillRect(starX, starY, 3, 3); // Lidt større og tydeligere
+                stars.forEach(star => {
+                    const twinkle = Math.sin(animationFrame * 0.05 + star.x) * 0.5 + 0.5;
+                    ctx.globalAlpha = twinkle;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+                // Optimized: Add nebula clouds and comet trails
+                ctx.fillStyle = 'rgba(148, 0, 211, 0.2)';
+                for (let i = 0; i < 5; i++) {
+                    let nebulaX = (backgroundOffset * 0.1 + i * 200 + Math.sin(animationFrame * 0.01 + i) * 50) % canvas.width;
+                    let nebulaY = (backgroundOffset * 0.05 + i * 100 + Math.cos(animationFrame * 0.02 + i) * 30) % canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(nebulaX, nebulaY, 100, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Comet trails
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 3; i++) {
+                    let cometX = (backgroundOffset * 2 + i * 300) % canvas.width;
+                    let cometY = (backgroundOffset + i * 100) % canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(cometX, cometY);
+                    ctx.lineTo(cometX - 50, cometY);
+                    ctx.stroke();
+                }
+                // Add wormholes
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                for (let i = 0; i < 2; i++) {
+                    let holeX = (backgroundOffset * 0.3 + i * 400) % canvas.width;
+                    let holeY = (backgroundOffset * 0.2 + i * 200) % canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(holeX, holeY, 50, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'purple';
+                    ctx.lineWidth = 5;
+                    ctx.stroke();
                 }
             }
 
@@ -936,7 +1343,7 @@
             ctx.shadowBlur = 5;
             ctx.shadowColor = 'black';
             walls.forEach(wall => {
-                if (wall.y + wall.height > 0 && wall.y < wall.height) {
+                if (wall.y + wall.height > 0 && wall.y < canvas.height) {
                     ctx.beginPath();
                     ctx.moveTo(wall.x, wall.y);
                     ctx.lineTo(wall.x + wall.width / 3, wall.y - 10);
@@ -948,28 +1355,79 @@
                     ctx.lineTo(wall.x, wall.y + wall.height);
                     ctx.closePath();
                     ctx.fill();
-                } else if (wall.y + wall.height > 0 && wall.y < canvas.height) ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+                    // Add texture to walls
+                    if (player.level === 6) {
+                        ctx.strokeStyle = 'darkbrown';
+                        ctx.lineWidth = 1;
+                        for (let k = 0; k < 5; k++) {
+                            ctx.beginPath();
+                            ctx.moveTo(wall.x + Math.random() * wall.width, wall.y + Math.random() * wall.height);
+                            ctx.lineTo(wall.x + Math.random() * wall.width, wall.y + Math.random() * wall.height);
+                            ctx.stroke();
+                        }
+                    }
+                }
             });
 
+            ctx.shadowBlur = 0;
             obstacles.forEach(obs => {
                 if (obs.y + obs.height > 0 && obs.y < canvas.height) {
-                    ctx.shadowBlur = 0;
                     switch (obs.type) {
                         case 'Angel':
+                            // Updated angel: more angelic wings, face, floating halo
                             ctx.shadowBlur = 15;
                             ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
+                            // Robe
                             ctx.fillStyle = 'white';
-                            ctx.fillRect(obs.x + 15, obs.y + 20, 30, 60);
                             ctx.beginPath();
-                            ctx.moveTo(obs.x, obs.y + 20);
-                            ctx.lineTo(obs.x + 20, obs.y + 40);
-                            ctx.lineTo(obs.x + 10, obs.y + 60);
+                            ctx.moveTo(obs.x + 30, obs.y + 80);
+                            ctx.lineTo(obs.x + 15, obs.y + 20);
+                            ctx.lineTo(obs.x + 45, obs.y + 20);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.fillRect(obs.x + 15, obs.y + 20, 30, 40);
+                            // Wings - adjusted to go more to the side
+                            ctx.fillStyle = 'white';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 15, obs.y + 40);
+                            ctx.quadraticCurveTo(obs.x - 40, obs.y + 40, obs.x - 60, obs.y + 60);
+                            ctx.quadraticCurveTo(obs.x - 40, obs.y + 60, obs.x + 15, obs.y + 40);
                             ctx.fill();
                             ctx.beginPath();
-                            ctx.moveTo(obs.x + 60, obs.y + 20);
-                            ctx.lineTo(obs.x + 40, obs.y + 40);
-                            ctx.lineTo(obs.x + 50, obs.y + 60);
+                            ctx.moveTo(obs.x + 15, obs.y + 40);
+                            ctx.quadraticCurveTo(obs.x - 50, obs.y + 20, obs.x - 70, obs.y + 30);
+                            ctx.quadraticCurveTo(obs.x - 50, obs.y + 40, obs.x + 15, obs.y + 40);
                             ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 45, obs.y + 40);
+                            ctx.quadraticCurveTo(obs.x + 85, obs.y + 40, obs.x + 105, obs.y + 60);
+                            ctx.quadraticCurveTo(obs.x + 85, obs.y + 60, obs.x + 45, obs.y + 40);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 45, obs.y + 40);
+                            ctx.quadraticCurveTo(obs.x + 95, obs.y + 20, obs.x + 115, obs.y + 30);
+                            ctx.quadraticCurveTo(obs.x + 95, obs.y + 40, obs.x + 45, obs.y + 40);
+                            ctx.fill();
+                            // Feather details
+                            ctx.strokeStyle = 'lightgray';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x - 30, obs.y + 50);
+                            ctx.lineTo(obs.x - 50, obs.y + 50);
+                            ctx.moveTo(obs.x - 25, obs.y + 55);
+                            ctx.lineTo(obs.x - 45, obs.y + 55);
+                            ctx.moveTo(obs.x - 35, obs.y + 45);
+                            ctx.lineTo(obs.x - 55, obs.y + 45);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 75, obs.y + 50);
+                            ctx.lineTo(obs.x + 95, obs.y + 50);
+                            ctx.moveTo(obs.x + 70, obs.y + 55);
+                            ctx.lineTo(obs.x + 90, obs.y + 55);
+                            ctx.moveTo(obs.x + 80, obs.y + 45);
+                            ctx.lineTo(obs.x + 100, obs.y + 45);
+                            ctx.stroke();
+                            // Head and face
                             ctx.fillStyle = 'tan';
                             ctx.beginPath();
                             ctx.arc(obs.x + 30, obs.y + 10, 15, 0, Math.PI * 2);
@@ -979,14 +1437,24 @@
                             ctx.arc(obs.x + 25, obs.y + 5, 2, 0, Math.PI * 2);
                             ctx.arc(obs.x + 35, obs.y + 5, 2, 0, Math.PI * 2);
                             ctx.fill();
-                            ctx.fillStyle = 'yellow';
-                            ctx.save();
-                            ctx.translate(obs.x + 30, obs.y - 10);
-                            ctx.rotate(animationFrame * 0.05);
+                            // Mouth
                             ctx.beginPath();
-                            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                            ctx.arc(obs.x + 30, obs.y + 15, 5, 0, Math.PI, false);
+                            ctx.strokeStyle = 'black';
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                            // Hair
+                            ctx.fillStyle = 'yellow';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 15, obs.y + 5);
+                            ctx.quadraticCurveTo(obs.x + 30, obs.y - 10, obs.x + 45, obs.y + 5);
                             ctx.fill();
-                            ctx.restore();
+                            // Halo floating above
+                            ctx.strokeStyle = 'yellow';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 30, obs.y - 10, 12, 0, Math.PI * 2);
+                            ctx.stroke();
                             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
                             ctx.beginPath();
                             ctx.arc(obs.x + 30, obs.y + 10, 20, 0, Math.PI * 2);
@@ -995,42 +1463,90 @@
                         case 'Harp':
                             ctx.shadowBlur = 10;
                             ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
-                            ctx.fillStyle = '#8B6914';
+                            ctx.fillStyle = '#D4AF37';
+                            // Updated harp: more like the instrument, with curved frame, strings
                             ctx.beginPath();
-                            ctx.moveTo(obs.x, obs.y + obs.height); // Bund
-                            ctx.lineTo(obs.x + obs.width / 2, obs.y); // Top
-                            ctx.lineTo(obs.x + obs.width, obs.y + obs.height); // Bund igen
-                            ctx.quadraticCurveTo(obs.x + obs.width * 0.75, obs.y + obs.height / 2, obs.x + obs.width / 4, obs.y + obs.height); // Buet ramme
+                            ctx.moveTo(obs.x, obs.y + obs.height);
+                            ctx.quadraticCurveTo(obs.x + obs.width * 0.2, obs.y + obs.height * 0.2, obs.x + obs.width * 0.5, obs.y + obs.height * 0.5);
+                            ctx.quadraticCurveTo(obs.x + obs.width * 0.8, obs.y + obs.height * 0.2, obs.x + obs.width, obs.y + obs.height);
+                            ctx.lineTo(obs.x + obs.width * 0.8, obs.y + obs.height);
+                            ctx.quadraticCurveTo(obs.x + obs.width * 0.6, obs.y + obs.height * 0.5, obs.x + obs.width * 0.4, obs.y + obs.height);
+                            ctx.lineTo(obs.x + obs.width * 0.2, obs.y + obs.height);
+                            ctx.quadraticCurveTo(obs.x + obs.width * 0.4, obs.y + obs.height * 0.5, obs.x + obs.width * 0.6, obs.y + obs.height);
                             ctx.closePath();
                             ctx.fill();
+                            // Strings
                             ctx.strokeStyle = 'white';
                             ctx.lineWidth = 1;
-                            for (let i = 1; i < 5; i++) { // Flere strenge
+                            for (let i = 1; i < 10; i++) { // More strings
                                 ctx.beginPath();
-                                ctx.moveTo(obs.x + i * (obs.width / 5), obs.y + obs.height);
+                                ctx.moveTo(obs.x + i * (obs.width / 10), obs.y + obs.height);
                                 ctx.lineTo(obs.x + obs.width / 2, obs.y);
                                 ctx.stroke();
                             }
+                            // Glow on strings
+                            ctx.shadowBlur = 5;
+                            ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+                            for (let i = 1; i < 10; i++) {
+                                ctx.beginPath();
+                                ctx.moveTo(obs.x + i * (obs.width / 10), obs.y + obs.height);
+                                ctx.lineTo(obs.x + obs.width / 2, obs.y);
+                                ctx.stroke();
+                            }
+                            ctx.shadowBlur = 0;
+                            // Decorative base
+                            ctx.fillStyle = '#B8860B';
+                            ctx.fillRect(obs.x + 5, obs.y + obs.height - 15, obs.width - 10, 15);
                             break;
                         case 'Gate':
                             ctx.shadowBlur = 20;
                             ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
                             ctx.fillStyle = 'gold';
-                            ctx.fillRect(obs.x, obs.y + 20, obs.width, obs.height - 20);
+                            // Updated gate: more like heaven's gate, with clouds, pearls, ornate design
                             ctx.beginPath();
-                            ctx.arc(obs.x + obs.width / 2, obs.y + 20, obs.width / 2, Math.PI, 0);
+                            ctx.moveTo(obs.x, obs.y + obs.height);
+                            ctx.lineTo(obs.x, obs.y + 20);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y - 20, obs.x + obs.width, obs.y + 20);
+                            ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+                            ctx.lineTo(obs.x + obs.width - 10, obs.y + obs.height);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y - 10, obs.x + 10, obs.y + obs.height);
+                            ctx.closePath();
                             ctx.fill();
-                            ctx.fillRect(obs.x, obs.y, obs.width, 10);
+                            ctx.fillRect(obs.x, obs.y, obs.width, 20); // Top bar
+                            // Bars
                             ctx.strokeStyle = 'darkgoldenrod';
-                            ctx.lineWidth = 2;
-                            for (let i = 0; i < 5; i++) {
+                            ctx.lineWidth = 3;
+                            for (let i = 0; i < 7; i++) {
                                 ctx.beginPath();
-                                ctx.moveTo(obs.x + (obs.width / 5) * i, obs.y + 20);
-                                ctx.lineTo(obs.x + (obs.width / 5) * i, obs.y + obs.height);
+                                ctx.moveTo(obs.x + (obs.width / 7) * i, obs.y + 20);
+                                ctx.lineTo(obs.x + (obs.width / 7) * i, obs.y + obs.height);
                                 ctx.stroke();
                             }
+                            // Pearls on top
+                            ctx.fillStyle = 'white';
+                            for (let i = 0; i < 8; i++) {
+                                ctx.beginPath();
+                                ctx.arc(obs.x + (obs.width / 8) * i, obs.y + 10, 8, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                            // Clouds around gate
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                            ctx.beginPath();
+                            ctx.arc(obs.x - 30, obs.y + obs.height / 2, 25, 0, Math.PI * 2);
+                            ctx.arc(obs.x - 15, obs.y + obs.height / 2 - 15, 20, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width + 30, obs.y + obs.height / 2, 25, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width + 15, obs.y + obs.height / 2 - 15, 20, 0, Math.PI * 2);
+                            ctx.fill();
+                            // Glow
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, 50, 0, Math.PI * 2);
+                            ctx.fill();
                             break;
                         case 'Bird':
+                            // Improved bird: more realistic wings with feathers, tail, beak
                             ctx.fillStyle = 'white';
                             const wingFlap = Math.sin(animationFrame * 0.2) * 5;
                             ctx.beginPath();
@@ -1038,6 +1554,15 @@
                             ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y + wingFlap, obs.x + obs.width, obs.y + obs.height / 2);
                             ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y + obs.height - wingFlap, obs.x, obs.y + obs.height / 2);
                             ctx.fill();
+                            // Feathers on wings
+                            ctx.strokeStyle = 'gray';
+                            ctx.lineWidth = 1;
+                            for (let k = 0; k < 3; k++) {
+                                ctx.beginPath();
+                                ctx.moveTo(obs.x + obs.width / 2, obs.y + obs.height / 2 + k * 5);
+                                ctx.lineTo(obs.x + obs.width, obs.y + obs.height / 2 + k * 5 + wingFlap);
+                                ctx.stroke();
+                            }
                             ctx.fillStyle = 'gray';
                             ctx.beginPath();
                             ctx.moveTo(obs.x + obs.width / 2, obs.y + obs.height / 2);
@@ -1049,14 +1574,23 @@
                             ctx.lineTo(obs.x + obs.width / 2 + 10, obs.y - 5);
                             ctx.lineTo(obs.x + obs.width / 2 + 15, obs.y + obs.height / 2);
                             ctx.fill();
+                            // Beak
                             ctx.fillStyle = 'yellow';
-                              ctx.beginPath();
+                            ctx.beginPath();
                             ctx.moveTo(obs.x + obs.width, obs.y + obs.height / 2);
                             ctx.lineTo(obs.x + obs.width + 5, obs.y + obs.height / 2 - 5);
                             ctx.lineTo(obs.x + obs.width + 10, obs.y + obs.height / 2);
                             ctx.fill();
+                            // Tail
+                            ctx.fillStyle = 'white';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 - 5);
+                            ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 + 5);
+                            ctx.fill();
                             break;
                         case 'Meteor':
+                            // Improved meteor: irregular shape, more craters, longer trail with more fire
                             ctx.shadowBlur = 15;
                             ctx.shadowColor = 'rgba(255, 69, 0, 0.7)';
                             ctx.fillStyle = 'gray';
@@ -1068,28 +1602,43 @@
                             ctx.lineTo(obs.x, obs.y + obs.height / 3);
                             ctx.closePath();
                             ctx.fill();
+                            // Craters
                             ctx.fillStyle = 'darkgray';
                             ctx.beginPath();
                             ctx.arc(obs.x + obs.width / 3, obs.y + obs.height / 3, 5, 0, Math.PI * 2);
                             ctx.arc(obs.x + obs.width * 2 / 3, obs.y + obs.height * 2 / 3, 7, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, 4, 0, Math.PI * 2);
                             ctx.fill();
                             ctx.fillStyle = 'white';
                             ctx.beginPath();
                             ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 4, 3, 0, Math.PI * 2);
                             ctx.fill();
+                            // Trail with more fire
                             ctx.fillStyle = 'red';
                             ctx.beginPath();
                             if (obs.speedX > 0) {
                                 ctx.moveTo(obs.x, obs.y + obs.height / 2);
-                                ctx.lineTo(obs.x - 20, obs.y + obs.height / 2 - 10);
-                                ctx.lineTo(obs.x - 20, obs.y + obs.height / 2 + 10);
+                                ctx.lineTo(obs.x - 40, obs.y + obs.height / 2 - 20);
+                                ctx.lineTo(obs.x - 40, obs.y + obs.height / 2 + 20);
                             } else {
                                 ctx.moveTo(obs.x + obs.width, obs.y + obs.height / 2);
-                                ctx.lineTo(obs.x + obs.width + 20, obs.y + obs.height / 2 - 10);
-                                ctx.lineTo(obs.x + obs.width + 20, obs.y + obs.height / 2 + 10);
+                                ctx.lineTo(obs.x + obs.width + 40, obs.y + obs.height / 2 - 20);
+                                ctx.lineTo(obs.x + obs.width + 40, obs.y + obs.height / 2 + 20);
                             }
                             ctx.fill();
                             ctx.fillStyle = 'orange';
+                            ctx.beginPath();
+                            if (obs.speedX > 0) {
+                                ctx.moveTo(obs.x, obs.y + obs.height / 2);
+                                ctx.lineTo(obs.x - 25, obs.y + obs.height / 2 - 12);
+                                ctx.lineTo(obs.x - 25, obs.y + obs.height / 2 + 12);
+                            } else {
+                                ctx.moveTo(obs.x + obs.width, obs.y + obs.height / 2);
+                                ctx.lineTo(obs.x + obs.width + 25, obs.y + obs.height / 2 - 12);
+                                ctx.lineTo(obs.x + obs.width + 25, obs.y + obs.height / 2 + 12);
+                            }
+                            ctx.fill();
+                            ctx.fillStyle = 'yellow';
                             ctx.beginPath();
                             if (obs.speedX > 0) {
                                 ctx.moveTo(obs.x, obs.y + obs.height / 2);
@@ -1103,48 +1652,73 @@
                             ctx.fill();
                             break;
                         case 'Airplane':
-                            ctx.fillStyle = 'silver';
-                            ctx.beginPath();
-                            ctx.ellipse(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, obs.height / 2, 0, 0, Math.PI * 2);
-                            ctx.fill();
-                            ctx.strokeStyle = 'red';
-                            ctx.lineWidth = 1;
-                            ctx.stroke();
+                            // Updated to SpaceX rocket: tall cylinder, nozzles, "Space X" text
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(obs.x + 20, obs.y, 60, 100); // Body
                             ctx.fillStyle = 'black';
-                            ctx.font = '12px Roboto';
-                            ctx.textAlign = 'center';
-                            ctx.fillText('SpaceX', obs.x + obs.width / 2, obs.y + obs.height / 2 + 5);
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 50, obs.y - 20);
+                            ctx.lineTo(obs.x + 30, obs.y);
+                            ctx.lineTo(obs.x + 70, obs.y);
+                            ctx.fill(); // Nose cone
+                            ctx.fillStyle = 'gray';
+                            ctx.fillRect(obs.x + 20, obs.y + 100, 60, 10); // Engine base
+                            // Nozzles
+                            ctx.fillStyle = 'darkgray';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 50, obs.y + 110);
+                            ctx.lineTo(obs.x + 30, obs.y + 130);
+                            ctx.lineTo(obs.x + 70, obs.y + 130);
+                            ctx.fill();
+                            // Flames
                             ctx.fillStyle = 'orange';
                             ctx.beginPath();
-                            ctx.moveTo(obs.x, obs.y + obs.height / 2);
-                            ctx.lineTo(obs.x - 20, obs.y + obs.height / 2 - 15);
-                            ctx.lineTo(obs.x - 20, obs.y + obs.height / 2 + 15);
+                            ctx.moveTo(obs.x + 50, obs.y + 130);
+                            ctx.lineTo(obs.x + 20, obs.y + 160);
+                            ctx.lineTo(obs.x + 80, obs.y + 160);
                             ctx.fill();
                             ctx.fillStyle = 'yellow';
                             ctx.beginPath();
-                            ctx.moveTo(obs.x, obs.y + obs.height / 2);
-                            ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 - 10);
-                            ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 + 10);
+                            ctx.moveTo(obs.x + 50, obs.y + 130);
+                            ctx.lineTo(obs.x + 30, obs.y + 150);
+                            ctx.lineTo(obs.x + 70, obs.y + 150);
                             ctx.fill();
+                            // Text "Space X"
+                            ctx.fillStyle = 'black';
+                            ctx.font = '10px Roboto';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('Space X', obs.x + 50, obs.y + 50);
                             break;
                         case 'Rock':
+                            // Improved rock: irregular jagged shape, cracks, shadows
                             ctx.fillStyle = 'gray';
                             ctx.beginPath();
                             for (let i = 0; i < 8; i++) {
                                 const angle = i * Math.PI / 4;
-                                const x = obs.x + obs.width / 2 + Math.cos(angle) * (obs.width / 2);
-                                const y = obs.y + obs.height / 2 + Math.sin(angle) * (obs.height / 2);
+                                const radius = obs.width / 2 + Math.random() * 5 - 2.5;
+                                const x = obs.x + obs.width / 2 + Math.cos(angle) * radius;
+                                const y = obs.y + obs.height / 2 + Math.sin(angle) * radius * (obs.height / obs.width);
                                 if (i === 0) ctx.moveTo(x, y);
                                 else ctx.lineTo(x, y);
                             }
                             ctx.closePath();
                             ctx.fill();
+                            // Cracks
+                            ctx.strokeStyle = 'darkgray';
+                            ctx.lineWidth = 2;
+                            for (let k = 0; k < 3; k++) {
+                                ctx.beginPath();
+                                ctx.moveTo(obs.x + Math.random() * obs.width, obs.y + Math.random() * obs.height);
+                                ctx.lineTo(obs.x + Math.random() * obs.width, obs.y + Math.random() * obs.height);
+                                ctx.stroke();
+                            }
+                            // Shadows
                             ctx.fillStyle = 'darkgray';
                             ctx.beginPath();
                             ctx.arc(obs.x + obs.width / 3, obs.y + obs.height / 3, 5, 0, Math.PI * 2);
-                            ctx.arc(obs.x + obs.width * 2 / 3, obs.y + obs.height * 2 / 3, 3, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width * 2 / 3, obs.y + obs.height / 2, 3, 0, Math.PI * 2);
                             ctx.fill();
-                            ctx.fillStyle = 'white'; // Sne på toppen
+                            ctx.fillStyle = 'white';
                             ctx.beginPath();
                             ctx.moveTo(obs.x + obs.width / 2, obs.y);
                             ctx.lineTo(obs.x + obs.width / 3, obs.y + obs.height / 4);
@@ -1153,6 +1727,7 @@
                             ctx.fill();
                             break;
                         case 'Tent':
+                            // Improved tent: add entrance flap, poles, guy lines
                             ctx.fillStyle = 'darkgreen';
                             ctx.beginPath();
                             ctx.moveTo(obs.x + obs.width / 2, obs.y);
@@ -1160,16 +1735,38 @@
                             ctx.lineTo(obs.x, obs.y + obs.height);
                             ctx.closePath();
                             ctx.fill();
+                            // Pole
                             ctx.strokeStyle = 'green';
                             ctx.lineWidth = 2;
                             ctx.beginPath();
                             ctx.moveTo(obs.x + obs.width / 2, obs.y);
                             ctx.lineTo(obs.x + obs.width / 2, obs.y + obs.height);
                             ctx.stroke();
+                            // Entrance flap
+                            ctx.fillStyle = 'green';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 4, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width / 2, obs.y + obs.height * 3 / 4);
+                            ctx.lineTo(obs.x + obs.width * 3 / 4, obs.y + obs.height / 2);
+                            ctx.fill();
+                            // Guy lines
+                            ctx.strokeStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height);
+                            ctx.lineTo(obs.x - 10, obs.y + obs.height + 10);
+                            ctx.moveTo(obs.x + obs.width, obs.y + obs.height);
+                            ctx.lineTo(obs.x + obs.width + 10, obs.y + obs.height + 10);
+                            ctx.stroke();
                             break;
                         case 'Climber':
+                            // Improved climber: add backpack, rope, helmet
                             ctx.fillStyle = 'blue';
                             ctx.fillRect(obs.x + 10, obs.y + 20, 20, 40);
+                            // Helmet
+                            ctx.fillStyle = 'red';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + 20, obs.y + 5, 12, 0, Math.PI * 2);
+                            ctx.fill();
                             ctx.fillStyle = 'tan';
                             ctx.beginPath();
                             ctx.arc(obs.x + 20, obs.y + 10, 10, 0, Math.PI * 2);
@@ -1179,45 +1776,122 @@
                             ctx.arc(obs.x + 17, obs.y + 8, 2, 0, Math.PI * 2);
                             ctx.arc(obs.x + 23, obs.y + 8, 2, 0, Math.PI * 2);
                             ctx.fill();
+                            // Backpack
+                            ctx.fillStyle = 'green';
+                            ctx.fillRect(obs.x + 5, obs.y + 25, 30, 20);
+                            // Rope
+                            ctx.strokeStyle = 'brown';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 20, obs.y + 60);
+                            ctx.lineTo(obs.x + 20, obs.y + 80);
+                            ctx.stroke();
                             break;
                         case 'Car':
+                            // Improved car: add headlights, grille, exhaust
                             ctx.fillStyle = 'red';
                             ctx.fillRect(obs.x, obs.y + obs.height / 3, obs.width, obs.height * 2 / 3);
                             ctx.fillStyle = 'lightgray';
                             ctx.fillRect(obs.x + obs.width / 4, obs.y + obs.height / 6, obs.width / 2, obs.height / 3);
+                            // Wheels
                             ctx.fillStyle = 'black';
                             ctx.beginPath();
                             ctx.arc(obs.x + obs.width / 5, obs.y + obs.height, 10, 0, Math.PI * 2);
                             ctx.arc(obs.x + obs.width * 4 / 5, obs.y + obs.height, 10, 0, Math.PI * 2);
                             ctx.fill();
+                            // Hubs
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 5, obs.y + obs.height, 5, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width * 4 / 5, obs.y + obs.height, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                            // Headlight
                             ctx.fillStyle = 'yellow';
                             ctx.fillRect(obs.x + obs.width - 10, obs.y + obs.height / 2, 5, 10);
+                            // Grille
+                            ctx.fillStyle = 'black';
+                            ctx.fillRect(obs.x + obs.width - 15, obs.y + obs.height / 2 + 5, 5, 5);
+                            // Exhaust
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x, obs.y + obs.height - 5);
+                            ctx.lineTo(obs.x - 10, obs.y + obs.height - 5);
+                            ctx.lineTo(obs.x - 10, obs.y + obs.height);
+                            ctx.fill();
                             break;
                         case 'Pedestrian':
+                            // Improved pedestrian: walking pose, arms swinging, clothes
                             ctx.fillStyle = 'gray';
                             ctx.fillRect(obs.x + 5, obs.y + 20, 10, 20);
+                            // Legs in motion
+                            const legAngle = Math.sin(animationFrame * 0.1) * 5;
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 10, obs.y + 40);
+                            ctx.lineTo(obs.x + 10 + legAngle, obs.y + 60);
+                            ctx.lineWidth = 4;
+                            ctx.strokeStyle = 'gray';
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 10, obs.y + 40);
+                            ctx.lineTo(obs.x + 10 - legAngle, obs.y + 60);
+                            ctx.stroke();
+                            // Arms
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 10, obs.y + 25);
+                            ctx.lineTo(obs.x + 10 - legAngle, obs.y + 40);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 10, obs.y + 25);
+                            ctx.lineTo(obs.x + 10 + legAngle, obs.y + 40);
+                            ctx.stroke();
                             ctx.fillStyle = 'tan';
                             ctx.beginPath();
                             ctx.arc(obs.x + 10, obs.y + 10, 5, 0, Math.PI * 2);
                             ctx.fill();
                             break;
                         case 'Building':
+                            // Improved building: more windows, door, antenna
                             ctx.fillStyle = 'gray';
                             ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
                             ctx.fillStyle = 'yellow';
-                            for (let i = 0; i < 3; i++) {
-                                for (let j = 0; j < 2; j++) {
-                                    ctx.fillRect(obs.x + 10 + i * 15, obs.y + 10 + j * 30, 10, 20);
+                            for (let i = 0; i < 4; i++) {
+                                for (let j = 0; j < 3; j++) {
+                                    ctx.fillRect(obs.x + 10 + i * 12, obs.y + 10 + j * 25, 8, 15);
                                 }
                             }
+                            // Door
+                            ctx.fillStyle = 'brown';
+                            ctx.fillRect(obs.x + obs.width / 2 - 10, obs.y + obs.height - 20, 20, 20);
+                            // Antenna
+                            ctx.strokeStyle = 'black';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y);
+                            ctx.lineTo(obs.x + obs.width / 2, obs.y - 20);
+                            ctx.stroke();
                             break;
                         case 'Fish':
+                            if (obs.speedX < 0) {
+                                ctx.save();
+                                ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                                ctx.scale(-1, 1);
+                                ctx.translate(-(obs.x + obs.width / 2), -(obs.y + obs.height / 2));
+                            }
+                            // Improved fish: scales, fins, eyes
                             ctx.fillStyle = 'silver';
                             ctx.beginPath();
                             ctx.moveTo(obs.x, obs.y + obs.height / 2);
                             ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y, obs.x + obs.width, obs.y + obs.height / 2);
                             ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y + obs.height, obs.x, obs.y + obs.height / 2);
                             ctx.fill();
+                            // Scales
+                            ctx.strokeStyle = 'darkgray';
+                            ctx.lineWidth = 1;
+                            for (let k = 0; k < 5; k++) {
+                                ctx.beginPath();
+                                ctx.arc(obs.x + k * 5 + 10, obs.y + obs.height / 2, 3, 0, Math.PI);
+                                ctx.stroke();
+                            }
                             ctx.fillStyle = 'black';
                             ctx.beginPath();
                             ctx.arc(obs.x + obs.width - 5, obs.y + obs.height / 2, 2, 0, Math.PI * 2);
@@ -1229,83 +1903,159 @@
                             ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 - 10 + tailFlap);
                             ctx.lineTo(obs.x - 10, obs.y + obs.height / 2 + 10 - tailFlap);
                             ctx.fill();
+                            // Fins
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width / 2 - 10, obs.y + 5);
+                            ctx.lineTo(obs.x + obs.width / 2 - 15, obs.y + obs.height / 2);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width / 2 - 10, obs.y + obs.height - 5);
+                            ctx.lineTo(obs.x + obs.width / 2 - 15, obs.y + obs.height / 2);
+                            ctx.fill();
+                            if (obs.speedX < 0) {
+                                ctx.restore();
+                            }
                             break;
                         case 'Shark':
-                            ctx.fillStyle = 'gray';
+                            if (obs.speedX < 0) {
+                                ctx.save();
+                                ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                                ctx.scale(-1, 1);
+                                ctx.translate(-(obs.x + obs.width / 2), -(obs.y + obs.height / 2));
+                            }
+                            // Updated shark: more realistic with gills, pectoral fins, realistic eyes
+                            ctx.fillStyle = 'darkgray';
                             ctx.beginPath();
                             ctx.moveTo(obs.x, obs.y + obs.height / 2);
-                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y, obs.x + obs.width, obs.y + obs.height / 2);
-                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y + obs.height, obs.x, obs.y + obs.height / 2);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y - 10, obs.x + obs.width, obs.y + obs.height / 2);
+                            ctx.quadraticCurveTo(obs.x + obs.width / 2, obs.y + obs.height + 10, obs.x, obs.y + obs.height / 2);
                             ctx.fill();
-                            ctx.fillStyle = 'gray';
+                            // Gills
+                            ctx.strokeStyle = 'black';
+                            ctx.lineWidth = 1;
+                            for (let i = 0; i < 5; i++) {
+                                ctx.beginPath();
+                                ctx.moveTo(obs.x + obs.width * 0.05 + i * 4, obs.y + obs.height * 0.3);
+                                ctx.lineTo(obs.x + obs.width * 0.05 + i * 4, obs.y + obs.height * 0.4);
+                                ctx.stroke();
+                            }
+                            // Tail
+                            ctx.fillStyle = 'darkgray';
                             ctx.beginPath();
                             ctx.moveTo(obs.x + obs.width, obs.y + obs.height / 2);
-                            ctx.lineTo(obs.x + obs.width + 15, obs.y + obs.height / 2 - 15);
-                            ctx.lineTo(obs.x + obs.width + 15, obs.y + obs.height / 2 + 15);
+                            ctx.lineTo(obs.x + obs.width + 20, obs.y + obs.height / 2 - 20);
+                            ctx.lineTo(obs.x + obs.width + 20, obs.y + obs.height / 2 + 20);
                             ctx.closePath();
                             ctx.fill();
+                            // Dorsal fin
                             ctx.beginPath();
                             ctx.moveTo(obs.x + obs.width * 0.6, obs.y + obs.height * 0.2);
-                            ctx.lineTo(obs.x + obs.width * 0.7, obs.y - 10);
+                            ctx.lineTo(obs.x + obs.width * 0.7, obs.y - 20);
                             ctx.lineTo(obs.x + obs.width * 0.8, obs.y + obs.height * 0.2);
                             ctx.fill();
+                            // Pectoral fin
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width * 0.3, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width * 0.1, obs.y + obs.height * 0.7);
+                            ctx.lineTo(obs.x + obs.width * 0.3, obs.y + obs.height * 0.6);
+                            ctx.fill();
+                            // Mouth with sharp teeth
                             ctx.fillStyle = 'white';
                             ctx.beginPath();
-                            ctx.moveTo(obs.x + obs.width * 0.1, obs.y + obs.height / 2 - 10);
-                            ctx.lineTo(obs.x + obs.width * 0.3, obs.y + obs.height / 2);
-                            ctx.lineTo(obs.x + obs.width * 0.1, obs.y + obs.height / 2 + 10);
+                            ctx.moveTo(obs.x + obs.width * 0.1, obs.y + obs.height / 2 - 15);
+                            ctx.lineTo(obs.x + obs.width * 0.3, obs.y + obs.height / 2 - 5);
+                            ctx.lineTo(obs.x + obs.width * 0.1, obs.y + obs.height / 2 + 15);
                             ctx.fill();
-                            ctx.fillStyle = 'gray';
-                            for (let i = 0; i < 3; i++) {
+                            // Sharp teeth
+                            ctx.fillStyle = 'white';
+                            for (let i = 0; i < 6; i++) {
                                 ctx.beginPath();
-                                ctx.moveTo(obs.x + obs.width * 0.1 + i * 5, obs.y + obs.height / 2 - 5);
-                                ctx.lineTo(obs.x + obs.width * 0.1 + i * 5 + 2, obs.y + obs.height / 2 + 5);
-                                ctx.lineTo(obs.x + obs.width * 0.1 + i * 5 + 4, obs.y + obs.height / 2 - 5);
+                                ctx.moveTo(obs.x + obs.width * 0.1 + i * 5, obs.y + obs.height / 2 - 10);
+                                ctx.lineTo(obs.x + obs.width * 0.1 + i * 5 + 3, obs.y + obs.height / 2 + 5);
+                                ctx.lineTo(obs.x + obs.width * 0.1 + i * 5 + 6, obs.y + obs.height / 2 - 10);
                                 ctx.fill();
                             }
+                            // Realistic eyes
+                            ctx.fillStyle = 'white';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width * 0.05, obs.y + obs.height * 0.4, 4, 0, Math.PI * 2);
+                            ctx.fill();
                             ctx.fillStyle = 'black';
                             ctx.beginPath();
-                            ctx.arc(obs.x + obs.width * 0.05, obs.y + obs.height * 0.4, 3, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width * 0.05 + 2, obs.y + obs.height * 0.4, 2, 0, Math.PI * 2);
                             ctx.fill();
+                            // Scars
+                            ctx.strokeStyle = 'black';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width * 0.2, obs.y + obs.height * 0.3);
+                            ctx.lineTo(obs.x + obs.width * 0.25, obs.y + obs.height * 0.35);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width * 0.4, obs.y + obs.height * 0.6);
+                            ctx.lineTo(obs.x + obs.width * 0.45, obs.y + obs.height * 0.65);
+                            ctx.stroke();
+                            if (obs.speedX < 0) {
+                                ctx.restore();
+                            }
                             break;
                         case 'StoneDots':
                             ctx.fillStyle = 'gray';
                             ctx.beginPath();
                             ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, 0, Math.PI * 2);
                             ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 2 + 5, obs.y + obs.height / 2 + 5, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'gray';
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 3, obs.y + obs.height / 3, 2, 0, Math.PI * 2);
+                            ctx.fill();
                             break;
                         case 'Demon':
+                            // Improved demon: horns, tail, wings
                             ctx.fillStyle = 'red';
                             ctx.beginPath();
                             ctx.arc(obs.x + 15, obs.y + 15, 15, 0, Math.PI * 2);
                             ctx.fill();
+                            // Horns
                             ctx.beginPath();
                             ctx.moveTo(obs.x + 10, obs.y);
                             ctx.lineTo(obs.x + 15, obs.y - 5);
                             ctx.lineTo(obs.x + 20, obs.y);
                             ctx.fill();
                             ctx.beginPath();
-                            ctx.moveTo(obs.x + 20, obs.y + 30);
-                            ctx.lineTo(obs.x + 25, obs.y + 35);
-                            ctx.lineTo(obs.x + 30, obs.y + 30);
+                            ctx.moveTo(obs.x + 5, obs.y);
+                            ctx.lineTo(obs.x + 10, obs.y - 10);
+                            ctx.lineTo(obs.x + 15, obs.y);
+                            ctx.fill();
+                            // Tail
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 15, obs.y + 30);
+                            ctx.quadraticCurveTo(obs.x + 25, obs.y + 40, obs.x + 30, obs.y + 30);
+                            ctx.lineTo(obs.x + 25, obs.y + 25);
+                            ctx.fill();
+                            // Wings
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 15, obs.y + 15);
+                            ctx.lineTo(obs.x + 5, obs.y + 5);
+                            ctx.lineTo(obs.x + 0, obs.y + 15);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 15, obs.y + 15);
+                            ctx.lineTo(obs.x + 25, obs.y + 5);
+                            ctx.lineTo(obs.x + 30, obs.y + 15);
                             ctx.fill();
                             ctx.fillStyle = 'black';
                             ctx.beginPath();
                             ctx.arc(obs.x + 10, obs.y + 15, 2, 0, Math.PI * 2);
                             ctx.arc(obs.x + 20, obs.y + 15, 2, 0, Math.PI * 2);
                             ctx.fill();
-                            ctx.beginPath();
-                            ctx.moveTo(obs.x + 8, obs.y + 10);
-                            ctx.lineTo(obs.x + 12, obs.y + 12);
-                            ctx.moveTo(obs.x + 18, obs.y + 12);
-                            ctx.lineTo(obs.x + 22, obs.y + 10);
-                            ctx.stroke();
-                            ctx.beginPath();
-                            ctx.moveTo(obs.x + 15, obs.y + 20);
-                            ctx.lineTo(obs.x + 15, obs.y + 25);
-                            ctx.stroke();
                             break;
                         case 'Devil':
+                            // Improved devil: pitchfork, tail, horns
                             ctx.shadowBlur = 15;
                             ctx.shadowColor = 'rgba(255, 0, 0, 0.7)';
                             ctx.fillStyle = 'darkred';
@@ -1320,6 +2070,12 @@
                             ctx.lineTo(obs.x + 70, obs.y + 60);
                             ctx.lineTo(obs.x + 80, obs.y + 50);
                             ctx.fill();
+                            // Tail
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 80, obs.y + 40);
+                            ctx.quadraticCurveTo(obs.x + 90, obs.y + 50, obs.x + 85, obs.y + 60);
+                            ctx.lineTo(obs.x + 80, obs.y + 55);
+                            ctx.fill();
                             ctx.fillStyle = 'tan';
                             ctx.beginPath();
                             ctx.arc(obs.x + 40, obs.y + 10, 15, 0, Math.PI * 2);
@@ -1329,45 +2085,60 @@
                             ctx.arc(obs.x + 35, obs.y + 10, 3, 0, Math.PI * 2);
                             ctx.arc(obs.x + 45, obs.y + 10, 3, 0, Math.PI * 2);
                             ctx.fill();
+                            // Horns
+                            ctx.fillStyle = 'black';
                             ctx.beginPath();
-                            ctx.moveTo(obs.x + 33, obs.y + 5);
-                            ctx.lineTo(obs.x + 37, obs.y + 7);
-                            ctx.moveTo(obs.x + 43, obs.y + 7);
-                            ctx.lineTo(obs.x + 47, obs.y + 5);
-                            ctx.stroke();
+                            ctx.moveTo(obs.x + 30, obs.y);
+                            ctx.lineTo(obs.x + 35, obs.y - 10);
+                            ctx.lineTo(obs.x + 40, obs.y);
+                            ctx.fill();
                             ctx.beginPath();
-                            ctx.moveTo(obs.x + 40, obs.y + 20);
-                            ctx.lineTo(obs.x + 40, obs.y + 30);
-                            ctx.stroke();
+                            ctx.moveTo(obs.x + 40, obs.y);
+                            ctx.lineTo(obs.x + 45, obs.y - 10);
+                            ctx.lineTo(obs.x + 50, obs.y);
+                            ctx.fill();
                             break;
                         case 'Flame':
+                            // Improved flame: multi-layered, more dynamic animation
                             ctx.shadowBlur = 10;
                             ctx.shadowColor = 'rgba(255, 69, 0, 0.8)';
                             ctx.fillStyle = 'orange';
                             const flameScale = Math.sin(animationFrame * 0.1) * 0.2 + 1;
                             ctx.save();
                             ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
-                            ctx.scale(flameScale, 1);
+                            ctx.scale(flameScale, 1.2);
                             ctx.beginPath();
                             ctx.moveTo(0, -obs.height / 2);
-                            ctx.lineTo(obs.width / 2, obs.height / 2);
-                            ctx.lineTo(-obs.width / 2, obs.height / 2);
+                            ctx.quadraticCurveTo(obs.width / 4, -obs.height / 4, obs.width / 2, 0);
+                            ctx.lineTo(0, obs.height / 2);
+                            ctx.lineTo(-obs.width / 2, 0);
+                            ctx.quadraticCurveTo(-obs.width / 4, -obs.height / 4, 0, -obs.height / 2);
                             ctx.closePath();
                             ctx.fill();
                             ctx.restore();
                             ctx.fillStyle = 'yellow';
                             ctx.save();
                             ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
-                            ctx.scale(flameScale * 0.7, 0.7);
+                            ctx.scale(flameScale * 0.7, 0.8);
                             ctx.beginPath();
                             ctx.moveTo(0, -obs.height / 2);
-                            ctx.lineTo(obs.width / 2, obs.height / 2);
-                            ctx.lineTo(-obs.width / 2, obs.height / 2);
+                            ctx.quadraticCurveTo(obs.width / 4, -obs.height / 4, obs.width / 2, 0);
+                            ctx.lineTo(0, obs.height / 2);
+                            ctx.lineTo(-obs.width / 2, 0);
+                            ctx.quadraticCurveTo(-obs.width / 4, -obs.height / 4, 0, -obs.height / 2);
                             ctx.closePath();
                             ctx.fill();
                             ctx.restore();
+                            // Add sparks
+                            ctx.fillStyle = 'red';
+                            for (let k = 0; k < 3; k++) {
+                                ctx.beginPath();
+                                ctx.arc(obs.x + obs.width / 2 + (Math.random() - 0.5) * 10, obs.y + (Math.random() * obs.height), 2, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
                             break;
                         case 'FinalDevil':
+                            // Improved final devil: larger horns, wings, fire
                             ctx.shadowBlur = 20;
                             ctx.shadowColor = 'rgba(255, 0, 0, 1)';
                             ctx.fillStyle = 'darkred';
@@ -1376,6 +2147,15 @@
                             ctx.moveTo(obs.x, obs.y + 200);
                             ctx.lineTo(obs.x + 75, obs.y);
                             ctx.lineTo(obs.x + 150, obs.y + 200);
+                            ctx.fill();
+                            // Wings
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 75, obs.y + 200);
+                            ctx.quadraticCurveTo(obs.x + 0, obs.y + 100, obs.x + 50, obs.y + 300);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 75, obs.y + 200);
+                            ctx.quadraticCurveTo(obs.x + 150, obs.y + 100, obs.x + 100, obs.y + 300);
                             ctx.fill();
                             ctx.fillStyle = 'tan';
                             ctx.beginPath();
@@ -1386,15 +2166,28 @@
                             ctx.arc(obs.x + 65, obs.y + 70, 5, 0, Math.PI * 2);
                             ctx.arc(obs.x + 85, obs.y + 70, 5, 0, Math.PI * 2);
                             ctx.fill();
+                            // Horns
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 60, obs.y + 45);
+                            ctx.lineTo(obs.x + 70, obs.y + 35);
+                            ctx.lineTo(obs.x + 80, obs.y + 45);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + 70, obs.y + 45);
+                            ctx.lineTo(obs.x + 80, obs.y + 35);
+                            ctx.lineTo(obs.x + 90, obs.y + 45);
+                            ctx.fill();
                             break;
                         case 'ShootingStar':
+                            // Improved shooting star: multi-point star, longer glowing tail
                             ctx.shadowBlur = 10;
                             ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
                             ctx.fillStyle = `rgba(255, 255, 255, ${Math.sin(animationFrame * 0.1) * 0.5 + 0.5})`;
                             ctx.beginPath();
-                            for (let i = 0; i < 6; i++) { // 6-spidset stjerne
-                                const angle = i * Math.PI / 3;
-                                const radius = i % 2 === 0 ? obs.width / 2 : obs.width / 4; // Stjerneform som *
+                            for (let i = 0; i < 10; i++) {
+                                const angle = i * Math.PI / 5;
+                                const radius = i % 2 === 0 ? obs.width / 1.5 : obs.width / 3;
                                 const x = obs.x + obs.width / 2 + Math.cos(angle) * radius;
                                 const y = obs.y + obs.height / 2 + Math.sin(angle) * radius;
                                 if (i === 0) ctx.moveTo(x, y);
@@ -1402,29 +2195,49 @@
                             }
                             ctx.closePath();
                             ctx.fill();
+                            // Tail
                             ctx.strokeStyle = 'white';
-                            ctx.lineWidth = 2;
+                            ctx.lineWidth = 3;
                             ctx.beginPath();
                             ctx.moveTo(obs.x + obs.width / 2, obs.y + obs.height / 2);
-                            ctx.lineTo(obs.x + obs.width / 2 - obs.speedX * 2, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width / 2 - obs.speedX * 3, obs.y + obs.height / 2);
+                            ctx.stroke();
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                            ctx.lineTo(obs.x + obs.width / 2 - obs.speedX * 4, obs.y + obs.height / 2 + (Math.random() - 0.5) * 5);
                             ctx.stroke();
                             break;
                         case 'Asteroid':
+                            // Improved asteroid: more craters, irregular shape
                             ctx.fillStyle = 'darkgray';
                             ctx.beginPath();
-                            ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, 0, Math.PI * 2);
+                            for (let i = 0; i < 8; i++) {
+                                const angle = i * Math.PI / 4;
+                                const radius = obs.width / 2 + Math.random() * 3 - 1.5;
+                                const x = obs.x + obs.width / 2 + Math.cos(angle) * radius;
+                                const y = obs.y + obs.height / 2 + Math.sin(angle) * radius;
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            }
+                            ctx.closePath();
                             ctx.fill();
                             ctx.fillStyle = 'gray';
                             ctx.beginPath();
                             ctx.arc(obs.x + obs.width / 3, obs.y + obs.height / 3, 3, 0, Math.PI * 2);
                             ctx.arc(obs.x + obs.width * 2 / 3, obs.y + obs.height / 2, 4, 0, Math.PI * 2);
                             ctx.arc(obs.x + obs.width / 4, obs.y + obs.height * 2 / 3, 2, 0, Math.PI * 2);
+                            ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 4, 3, 0, Math.PI * 2);
                             ctx.fill();
                             break;
                         case 'AsteroidBelt':
+                            // Improved asteroid belt: cluster of small rocks
                             ctx.fillStyle = 'darkgray';
                             ctx.beginPath();
                             ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(obs.x + obs.width / 2 + 5, obs.y + obs.height / 2 + 5, 3, 0, Math.PI * 2);
                             ctx.fill();
                             ctx.fillStyle = 'gray';
                             ctx.beginPath();
@@ -1432,21 +2245,37 @@
                             ctx.fill();
                             break;
                         case 'Star':
-                            ctx.fillStyle = 'white';
+                            // Improved star: twinkling, more points
+                            const twinkle = Math.sin(animationFrame * 0.1) * 0.5 + 0.5;
+                            ctx.fillStyle = `rgba(255, 255, 255, ${twinkle})`;
                             ctx.beginPath();
-                            for (let i = 0; i < 6; i++) { // 6-spidset stjerne
-                                const angle = i * Math.PI / 3;
-                                const radius = i % 2 === 0 ? obs.width / 2 : obs.width / 4; // Stjerneform som *
-                                const x = obs.x + obs.width / 2 + Math.cos(angle) * radius;
-                                const y = obs.y + obs.height / 2 + Math.sin(angle) * radius;
+                            for (let i = 0; i < 5; i++) {
+                                const angle = i * 2 * Math.PI / 5 - Math.PI / 2;
+                                const x = obs.x + obs.width / 2 + Math.cos(angle) * obs.width / 2;
+                                const y = obs.y + obs.height / 2 + Math.sin(angle) * obs.height / 2;
                                 if (i === 0) ctx.moveTo(x, y);
                                 else ctx.lineTo(x, y);
                             }
                             ctx.closePath();
                             ctx.fill();
+                            ctx.fillStyle = 'yellow';
+                            ctx.beginPath();
+                            for (let i = 0; i < 5; i++) {
+                                const angle = i * 2 * Math.PI / 5 - Math.PI / 2;
+                                const x = obs.x + obs.width / 2 + Math.cos(angle) * obs.width / 4;
+                                const y = obs.y + obs.height / 2 + Math.sin(angle) * obs.height / 4;
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            }
+                            ctx.closePath();
+                            ctx.fill();
+                            // Add glow
+                            ctx.shadowBlur = 5;
+                            ctx.shadowColor = 'yellow';
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
                             break;
                     }
-                    ctx.shadowBlur = 0;
                 }
             });
 
@@ -1462,17 +2291,29 @@
                             ctx.fill();
                             break;
                         case 'pitchfork':
-                            ctx.fillStyle = 'gray';
+                            // Updated pitchfork: more like fork, black
+                            ctx.fillStyle = 'black';
                             ctx.beginPath();
                             ctx.moveTo(proj.x + proj.width / 2, proj.y);
-                            ctx.lineTo(proj.x + proj.width / 2, proj.y + proj.height);
-                            ctx.lineTo(proj.x + proj.width / 2 - 5, proj.y + proj.height);
-                            ctx.lineTo(proj.x + proj.width / 2 - 5, proj.y + proj.height / 2);
-                            ctx.lineTo(proj.x + proj.width / 2, proj.y + proj.height / 2);
-                            ctx.lineTo(proj.x + proj.width / 2 + 5, proj.y + proj.height / 2);
-                            ctx.lineTo(proj.x + proj.width / 2 + 5, proj.y + proj.height);
-                            ctx.closePath();
+                            ctx.lineTo(proj.x + proj.width / 2, proj.y + proj.height - 5); // Handle
+                            ctx.fillRect(proj.x + proj.width / 2 - 1, proj.y, 2, proj.height - 5);
+                            // Prongs
+                            ctx.moveTo(proj.x, proj.y + proj.height - 5);
+                            ctx.lineTo(proj.x, proj.y + proj.height);
+                            ctx.lineTo(proj.x + proj.width / 3, proj.y + proj.height);
+                            ctx.lineTo(proj.x + proj.width / 3, proj.y + proj.height - 5);
                             ctx.fill();
+                            ctx.moveTo(proj.x + proj.width / 3, proj.y + proj.height - 5);
+                            ctx.lineTo(proj.x + proj.width / 3, proj.y + proj.height);
+                            ctx.lineTo(proj.x + 2 * proj.width / 3, proj.y + proj.height);
+                            ctx.lineTo(proj.x + 2 * proj.width / 3, proj.y + proj.height - 5);
+                            ctx.fill();
+                            ctx.moveTo(proj.x + 2 * proj.width / 3, proj.y + proj.height - 5);
+                            ctx.lineTo(proj.x + 2 * proj.width / 3, proj.y + proj.height);
+                            ctx.lineTo(proj.x + proj.width, proj.y + proj.height);
+                            ctx.lineTo(proj.x + proj.width, proj.y + proj.height - 5);
+                            ctx.fill();
+                            ctx.fillRect(proj.x, proj.y + proj.height - 5, proj.width, 5); // Base bar
                             break;
                         case 'bigFireball':
                             ctx.shadowBlur = 15;
@@ -1521,8 +2362,8 @@
                     const wingFlap = Math.sin(player.animationFrame * 0.2) * 5;
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                     ctx.beginPath();
-                    ctx.moveTo(0, 0); // Start midt på kroppen
-                    ctx.quadraticCurveTo(player.width / 4, wingFlap - 10, player.width, wingFlap); // Oval vingeform
+                    ctx.moveTo(0, 0);
+                    ctx.quadraticCurveTo(player.width / 4, wingFlap - 10, player.width, wingFlap);
                     ctx.lineTo(player.width, 10);
                     ctx.quadraticCurveTo(player.width / 4, 20, 0, 10);
                     ctx.closePath();
@@ -1534,14 +2375,6 @@
                     ctx.quadraticCurveTo(-player.width / 4, 20, 0, 10);
                     ctx.closePath();
                     ctx.fill();
-                    if (speedBoostActive) {
-                        ctx.strokeStyle = 'gray';
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(0, player.height / 4);
-                        ctx.lineTo(-10, player.height / 4 + 10);
-                        ctx.stroke();
-                    }
                 } else if (player.form === 'frog') {
                     ctx.fillStyle = 'green';
                     ctx.beginPath();
@@ -1572,146 +2405,176 @@
                     ctx.fill();
                     ctx.beginPath();
                     ctx.moveTo(-15, 0);
-                    ctx.lineTo(-20, 10 + legBend);
-                    ctx.lineTo(-25, 20);
+                    ctx.lineTo(-20, legBend);
+                    ctx.lineTo(-25, 0);
                     ctx.fill();
                     ctx.beginPath();
                     ctx.moveTo(15, 0);
-                    ctx.lineTo(20, 10 + legBend);
-                    ctx.lineTo(25, 20);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.moveTo(-10, 20);
-                    ctx.lineTo(-15, 20 + legBend);
-                    ctx.lineTo(-20, 20);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.moveTo(10, 20);
-                    ctx.lineTo(15, 20 + legBend);
-                    ctx.lineTo(20, 20);
+                    ctx.lineTo(20, legBend);
+                    ctx.lineTo(25, 0);
                     ctx.fill();
                     ctx.fillStyle = 'black';
                     ctx.beginPath();
-                    ctx.arc(0, -5, 5, 0, Math.PI * 2);
-                    ctx.fill();
+                    ctx.moveTo(-10, -5);
+                    ctx.lineTo(10, -5);
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
                     ctx.fillStyle = 'red';
-                    ctx.beginPath();
-                    ctx.arc(0, -5, 3, 0, Math.PI * 2);
-                    ctx.fill();
                     if (player.jumping) {
                         ctx.beginPath();
                         ctx.moveTo(0, -5);
-                        ctx.lineTo(20, 20);
-                        ctx.lineTo(-20, 20);
+                        ctx.lineTo(40, 10);
+                        ctx.lineTo(-40, 10);
                         ctx.fill();
                     } else if (speedBoostActive) {
                         ctx.beginPath();
                         ctx.moveTo(0, -5);
-                        ctx.lineTo(10, 10);
-                        ctx.lineTo(-10, 10);
+                        ctx.lineTo(20, 5);
+                        ctx.lineTo(-20, 5);
                         ctx.fill();
                     }
-                } else if (player.form === 'monkey') {
-                    // Genskabt abe med supermandskappe
+                } else if (player.form === 'dog') {
                     ctx.fillStyle = 'brown';
                     ctx.beginPath();
-                    ctx.arc(0, -player.height / 4, 10, 0, Math.PI * 2); // Hoved
+                    ctx.arc(0, -player.height / 4, 15, 0, Math.PI * 2); // Hoved
                     ctx.fill();
-                    ctx.fillRect(-5, -player.height / 4, 10, player.height / 2); // Krop
-                    ctx.beginPath();
-                    ctx.moveTo(-10, -player.height / 4); // Venstre arm fremme
-                    ctx.lineTo(-20, -player.height / 2);
-                    ctx.lineTo(-25, -player.height / 4);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.moveTo(5, -player.height / 4); // Højre arm
-                    ctx.lineTo(10, 0);
-                    ctx.lineTo(15, -player.height / 4);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.moveTo(-5, player.height / 4); // Hale
-                    ctx.lineTo(-15, player.height / 2 + Math.sin(animationFrame * 0.2) * 5);
-                    ctx.lineTo(-20, player.height / 2);
-                    ctx.fill();
-                    ctx.fillStyle = 'red';
-                    ctx.beginPath();
-                    ctx.moveTo(0, -player.height / 4); // Supermandskappe
-                    ctx.lineTo(10, -player.height / 4 + Math.sin(animationFrame * 0.2) * 5);
-                    ctx.lineTo(20, player.height / 4);
-                    ctx.lineTo(-10, player.height / 4);
-                    ctx.closePath();
-                    ctx.fill();
+                    ctx.fillRect(-20, -player.height / 4, 40, player.height / 2); // Krop
                     ctx.fillStyle = 'tan';
                     ctx.beginPath();
-                    ctx.arc(0, -player.height / 4 - 5, 5, 0, Math.PI * 2); // Ansigt
+                    ctx.arc(0, -player.height / 4 + 5, 10, 0, Math.PI * 2); // Snude
+                    ctx.fill();
+                    ctx.fillStyle = 'brown';
+                    ctx.beginPath();
+                    ctx.moveTo(-20, -player.height / 4 - 10); // Venstre øre
+                    ctx.lineTo(-25, -player.height / 4 - 20);
+                    ctx.lineTo(-15, -player.height / 4 - 20);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(20, -player.height / 4 - 10); // Højre øre
+                    ctx.lineTo(25, -player.height / 4 - 20);
+                    ctx.lineTo(15, -player.height / 4 - 20);
                     ctx.fill();
                     ctx.fillStyle = 'black';
                     ctx.beginPath();
-                    ctx.arc(-2, -player.height / 4 - 5, 1, 0, Math.PI * 2); // Øjne
-                    ctx.arc(2, -player.height / 4 - 5, 1, 0, Math.PI * 2);
+                    ctx.arc(-5, -player.height / 4 - 5, 2, 0, Math.PI * 2); // Øjne
+                    ctx.arc(5, -player.height / 4 - 5, 2, 0, Math.PI * 2);
                     ctx.fill();
-                    if (speedBoostActive) {
-                        ctx.fillStyle = 'yellow';
-                        ctx.beginPath();
-                        ctx.moveTo(0, player.height / 4);
-                        ctx.lineTo(-10, player.height / 2);
-                        ctx.lineTo(-15, player.height / 4);
-                        ctx.fill();
-                    }
-                }
-                if (player.jumping) {
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = 'yellow';
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.arc(0, 0, 25, 0, Math.PI * 2);
+                    ctx.arc(0, -player.height / 4 + 10, 3, 0, Math.PI * 2); // Næse
+                    ctx.fill();
+                    ctx.fillStyle = 'brown';
+                    ctx.beginPath();
+                    ctx.moveTo(-20, player.height / 4); // Forreste venstre pote
+                    ctx.lineTo(-25, player.height / 2);
+                    ctx.lineTo(-30, player.height / 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(20, player.height / 4); // Forreste højre pote
+                    ctx.lineTo(25, player.height / 2);
+                    ctx.lineTo(30, player.height / 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(-15, player.height / 4); // Bageste venstre pote
+                    ctx.lineTo(-20, player.height / 2);
+                    ctx.lineTo(-25, player.height / 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(15, player.height / 4); // Bageste højre pote
+                    ctx.lineTo(20, player.height / 2);
+                    ctx.lineTo(25, player.height / 2);
+                    ctx.fill();
+                    const tailFlap = Math.sin(player.animationFrame * 0.2) * 10;
+                    ctx.beginPath();
+                    ctx.moveTo(-20, player.height / 4); // Hale
+                    ctx.lineTo(-30, player.height / 4 + tailFlap);
+                    ctx.lineTo(-35, player.height / 4);
+                    ctx.fill();
+                    if (player.jumping) {
+                        ctx.fillStyle = 'white';
+                        ctx.beginPath();
+                        ctx.moveTo(20, -player.height / 4 - 20);
+                        ctx.quadraticCurveTo(30, -player.height / 4 - 30, 40, -player.height / 4 - 20);
+                        ctx.lineTo(40, -player.height / 4 - 10);
+                        ctx.quadraticCurveTo(30, -player.height / 4 - 20, 20, -player.height / 4 - 10);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.fillStyle = 'black';
+                        ctx.font = '12px Roboto';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Vuf', 30, -player.height / 4 - 15);
+                    }
+                } else if (player.form === 'monkey') {
+                    ctx.fillStyle = 'brown';
+                    ctx.beginPath();
+                    ctx.arc(0, -20, 15, 0, Math.PI * 2); // Head
+                    ctx.fill();
+                    ctx.fillStyle = 'tan';
+                    ctx.beginPath();
+                    ctx.arc(0, -15, 10, 0, Math.PI * 2); // Face
+                    ctx.fill();
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.arc(-5, -20, 2, 0, Math.PI * 2);
+                    ctx.arc(5, -20, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'brown';
+                    ctx.fillRect(-10, -10, 20, 20); // Body
+                    ctx.beginPath();
+                    ctx.moveTo(-10, 10);
+                    ctx.lineTo(-15, 30);
+                    ctx.lineTo(-5, 30);
+                    ctx.fill(); // Left leg
+                    ctx.beginPath();
+                    ctx.moveTo(10, 10);
+                    ctx.lineTo(15, 30);
+                    ctx.lineTo(5, 30);
+                    ctx.fill(); // Right leg
+                    ctx.beginPath();
+                    ctx.moveTo(-10, 0);
+                    ctx.lineTo(-20, 20);
+                    ctx.lineTo(-15, 20);
+                    ctx.fill(); // Left arm
+                    ctx.beginPath();
+                    ctx.moveTo(10, 0);
+                    ctx.lineTo(20, 20);
+                    ctx.lineTo(15, 20);
+                    ctx.fill(); // Right arm
+                    const tailBend = Math.sin(player.animationFrame * 0.1) * 5;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 10);
+                    ctx.quadraticCurveTo(-5, 20 + tailBend, -10, 10);
+                    ctx.strokeStyle = 'brown';
+                    ctx.lineWidth = 3;
                     ctx.stroke();
                 }
             }
             ctx.restore();
 
-            ctx.shadowBlur = 5;
-            ctx.shadowColor = 'black';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(10, 10, 200, 20);
+            ctx.fillStyle = 'green';
+            ctx.fillRect(10, 10, player.energy * 2, 20);
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Roboto';
+            ctx.fillText(`Energi: ${player.energy}`, 20, 25);
+
             ctx.fillStyle = 'white';
             ctx.font = '20px Roboto';
-            ctx.textAlign = 'left';
-            ctx.fillText(`Tid: ${timeElapsed.toFixed(2)}s`, 10, 30);
+            ctx.fillText(`Tid: ${timeElapsed.toFixed(2)}s`, canvas.width - 100, 30);
+
             if (player.fullRun) {
-                ctx.fillText(`Liv: ${player.lives}`, 10, 60);
-                ctx.fillText(`Full Run Tid: ${player.fullRunTimer.toFixed(2)}s`, 10, 90);
-            }
-            ctx.fillText(`Level: ${player.level}`, 10, player.fullRun ? 120 : 60);
-
-            const energyGradient = ctx.createLinearGradient(0, 0, 100, 0);
-            energyGradient.addColorStop(0, 'red');
-            energyGradient.addColorStop(1, 'green');
-            ctx.fillStyle = energyGradient;
-            ctx.fillRect(10, canvas.height - 40, player.energy, 20);
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(10, canvas.height - 40, 100, 20);
-            if (player.energy === 100) {
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = 'green';
-                ctx.strokeStyle = 'white';
-                ctx.strokeRect(10, canvas.height - 40, 100, 20);
+                ctx.fillText(`Dødsfald: ${player.deaths}`, 10, 50);
+                ctx.fillText(`Full Run Tid: ${player.fullRunTimer.toFixed(2)}s`, canvas.width / 2 - 100, 30);
             }
 
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = `rgba(0, 0, 0, ${1 - fadeAlpha})`;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Lysglimt ved afslutning af level 1
             if (flashTimer > 0) {
-                ctx.fillStyle = `rgba(255, 255, 255, ${flashTimer * 2})`;
+                ctx.fillStyle = 'rgba(255, 255, 255, ' + flashTimer + ')';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
             ctx.restore();
         }
-
-        nameScreen.style.display = 'block';
     </script>
 </body>
 </html>
